@@ -21,6 +21,7 @@ export const API = {
     STOCKS_UPLOAD: `${API_BASE}/api/stocks/upload`,
     STOCKS_RESET: `${API_BASE}/api/stocks/reset`,
     STOCKS_CUSTOM: `${API_BASE}/api/stocks/custom`,
+    STOCK_HISTORY: (symbol, period) => `${API_BASE}/api/stocks/history/${symbol}?period=${period}`,
 
     // Backtest endpoints
     BACKTEST: `${API_BASE}/api/backtest`,

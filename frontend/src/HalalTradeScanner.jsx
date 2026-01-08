@@ -15,6 +15,7 @@ import {
 
 // Import components from subfolders
 import { ConnectionStatus, ExportButton } from './components/common';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { StockTable, StockDetailPanel, WatchlistPanel, WatchlistIndicator, CompareStocks } from './components/scanner';
 import { TelegramSettings, TelegramButton, StockListSettings, StockListButton, AlertSettings } from './components/settings';
 import { Portfolio } from './components/portfolio';
@@ -132,18 +133,21 @@ const HalalTradeApp = () => {
                         setStocks(prevStocks => {
                             const updatedStocks = [...prevStocks];
 
-                            message.data.forEach(update => {
-                                const stockIndex = updatedStocks.findIndex(s => s.symbol === update.symbol);
-                                if (stockIndex !== -1) {
-                                    newPreviousPrices[update.symbol] = updatedStocks[stockIndex].price;
-                                    updatedStocks[stockIndex] = {
-                                        ...updatedStocks[stockIndex],
-                                        price: update.price,
-                                        priceChange: update.change,
-                                        priceChangePercent: update.changePercent
-                                    };
-                                }
-                            });
+                            // Defensive: Ensure data is array
+                            if (Array.isArray(message.data)) {
+                                message.data.forEach(update => {
+                                    const stockIndex = updatedStocks.findIndex(s => s.symbol === update.symbol);
+                                    if (stockIndex !== -1) {
+                                        newPreviousPrices[update.symbol] = updatedStocks[stockIndex].price;
+                                        updatedStocks[stockIndex] = {
+                                            ...updatedStocks[stockIndex],
+                                            price: update.price,
+                                            priceChange: update.change,
+                                            priceChangePercent: update.changePercent
+                                        };
+                                    }
+                                });
+                            }
 
                             return updatedStocks;
                         });
@@ -152,9 +156,12 @@ const HalalTradeApp = () => {
 
                         setSelectedStock(prev => {
                             if (!prev) return null;
-                            const update = message.data.find(u => u.symbol === prev.symbol);
-                            if (update) {
-                                return { ...prev, price: update.price };
+                            // Defensive: Ensure data is array
+                            if (Array.isArray(message.data)) {
+                                const update = message.data.find(u => u.symbol === prev.symbol);
+                                if (update) {
+                                    return { ...prev, price: update.price };
+                                }
                             }
                             return prev;
                         });
@@ -304,11 +311,13 @@ const HalalTradeApp = () => {
 
                 <div className="flex flex-col gap-4">
                     {selectedStock ? (
-                        <StockDetailPanel
-                            stock={selectedStock}
-                            useLiveMode={useLiveMode}
-                            wsConnected={wsConnected}
-                        />
+                        <ErrorBoundary>
+                            <StockDetailPanel
+                                stock={selectedStock}
+                                useLiveMode={useLiveMode}
+                                wsConnected={wsConnected}
+                            />
+                        </ErrorBoundary>
                     ) : (
                         <EmptyDetailPanel />
                     )}
@@ -384,111 +393,128 @@ const Header = ({
     onOpenPortfolio, onOpenAlerts, onOpenCompare,
     stocks
 }) => (
-    <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-2">
-                <ShieldCheck className="w-8 h-8 text-emerald-400" />
-                HalalTrade Pro
-            </h1>
-            <div className="flex items-center gap-3 mt-1">
-                <p className="text-gray-400 text-sm">
-                    {useLiveMode ? 'LIVE MARKET MODE' : 'SIMULATION MODE'}
-                </p>
-                {useLiveMode && (
-                    <ConnectionStatus
-                        isConnected={wsConnected}
-                        isConnecting={wsConnecting}
-                        lastUpdate={lastUpdate}
+    <div className="max-w-7xl mx-auto mb-8">
+        <div className="flex flex-col xl:flex-row justify-between items-center gap-6 p-1">
+            {/* BRANDING SECTION */}
+            <div className="flex flex-col md:flex-row items-center gap-6">
+                <div>
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-3">
+                        <ShieldCheck className="w-10 h-10 text-emerald-400" />
+                        HalalTrade Pro
+                    </h1>
+                    <div className="flex items-center gap-2 mt-2 ml-1">
+                        {useLiveMode ? (
+                            <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${wsConnected ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500'}`}>
+                                <Wifi className={`w-3 h-3 ${wsConnected ? 'animate-pulse' : ''}`} />
+                                {wsConnected ? 'Live Market Active' : 'Connecting...'}
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border bg-gray-700/30 border-gray-600 text-gray-400">
+                                <Server className="w-3 h-3" />
+                                Simulation Mode
+                            </div>
+                        )}
+                        {useLiveMode && wsConnected && (
+                            <span className="text-[10px] text-gray-500 font-mono">
+                                {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : ''}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* ACTION TOOLBAR */}
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-gray-800/40 p-2 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
+
+                {/* GROUP 1: NAVIGATION */}
+                <div className="flex items-center gap-2 pr-4 md:border-r border-gray-700/50">
+                    <button
+                        onClick={onOpenPortfolio}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all text-gray-400 hover:text-white hover:bg-gray-700/50"
+                    >
+                        <div className="md:hidden">💼</div>
+                        <span className="hidden md:inline">Portfolio</span>
+                    </button>
+
+                    <WatchlistIndicator
+                        count={watchlistCount}
+                        onClick={onOpenWatchlist}
                     />
-                )}
+                </div>
+
+                {/* GROUP 2: TOOLS */}
+                <div className="flex items-center gap-2 pr-4 md:border-r border-gray-700/50">
+                    <StockListButton
+                        onClick={onOpenStockList}
+                        count={stockListCount}
+                    />
+
+                    <button
+                        onClick={onOpenCompare}
+                        className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all tooltip"
+                        title="Compare Stocks"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5" /><path d="M21 3l-7 7" /><path d="M21 21v-5h-5" /><path d="M21 21l-7-7" /><path d="M3 21h5v-5" /><path d="M3 21l7-7" /><path d="M3 3h5v5" /><path d="M3 3l7 7" /></svg>
+                    </button>
+
+                    <button
+                        onClick={onOpenAlerts}
+                        className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all tooltip"
+                        title="Alerts"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                    </button>
+
+                    <TelegramButton
+                        onClick={onOpenTelegram}
+                        isEnabled={telegramEnabled}
+                    />
+
+                    <ExportButton stocks={stocks} type="scan" />
+                </div>
+
+                {/* GROUP 3: SYSTEM & PRIMARY ACTION */}
+                <div className="flex items-center gap-3 pl-2">
+                    <div className="flex items-center bg-gray-900/50 rounded-lg p-1 border border-gray-700/50">
+                        <button
+                            onClick={() => setUseLiveMode(false)}
+                            className={`p-1.5 rounded-md transition-all ${!useLiveMode ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                            title="Simulation Mode"
+                        >
+                            <Server className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setUseLiveMode(true)}
+                            className={`p-1.5 rounded-md transition-all ${useLiveMode ? 'bg-red-500/20 text-red-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
+                            title="Live Mode"
+                        >
+                            <Wifi className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => setShowHalalOnly(!showHalalOnly)}
+                        className={`p-2 rounded-lg transition-all border ${showHalalOnly
+                            ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400'
+                            : 'border-transparent text-gray-400 hover:bg-gray-700/50'}`}
+                        title={showHalalOnly ? "Showing Halal Only" : "Filter Halal"}
+                    >
+                        <Filter className="w-5 h-5" />
+                    </button>
+
+                    <button
+                        onClick={handleScan}
+                        disabled={isScanning}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${useLiveMode
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 shadow-red-900/20'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-900/20'
+                            }`}
+                    >
+                        {isScanning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                        <span>{isScanning ? 'Scanning...' : 'Scan Market'}</span>
+                    </button>
+                </div>
             </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 items-center">
-            {/* Stock List Button */}
-            <StockListButton
-                onClick={onOpenStockList}
-                count={stockListCount}
-            />
-
-            {/* Alerts Button */}
-            <button
-                onClick={onOpenAlerts}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
-            >
-                <div className="md:hidden">🔔</div>
-                <span className="hidden md:inline">Alerts</span>
-            </button>
-
-            <button
-                onClick={onOpenCompare}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
-            >
-                <div className="md:hidden">⚖️</div>
-                <span className="hidden md:inline">Compare</span>
-            </button>
-
-            {/* Portfolio Button */}
-            <button
-                onClick={onOpenPortfolio}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"
-            >
-                <div className="md:hidden">💼</div>
-                <span className="hidden md:inline">Portfolio</span>
-            </button>
-
-            {/* Telegram Button */}
-            <TelegramButton
-                onClick={onOpenTelegram}
-                isEnabled={telegramEnabled}
-            />
-
-            {/* Watchlist Button */}
-            <WatchlistIndicator
-                count={watchlistCount}
-                onClick={onOpenWatchlist}
-            />
-
-            {/* Export Button */}
-            <ExportButton stocks={stocks} type="scan" />
-
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg border border-gray-700">
-                <button
-                    onClick={() => setUseLiveMode(false)}
-                    className={`px-3 py-1.5 rounded text-xs font-bold transition-all flex items-center gap-1 ${!useLiveMode ? 'bg-gray-600 text-white' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <Server className="w-3 h-3" /> Simulation
-                </button>
-                <button
-                    onClick={() => setUseLiveMode(true)}
-                    className={`px-3 py-1.5 rounded text-xs font-bold transition-all flex items-center gap-1 ${useLiveMode ? 'bg-red-600 text-white animate-pulse' : 'text-gray-400 hover:text-white'}`}
-                >
-                    <Wifi className="w-3 h-3" /> LIVE MODE
-                </button>
-            </div>
-
-            {/* Filter Toggle */}
-            <button
-                onClick={() => setShowHalalOnly(!showHalalOnly)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${showHalalOnly
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/50'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-            >
-                <Filter className="w-4 h-4" />
-                {showHalalOnly ? 'Halal Only' : 'Show All'}
-            </button>
-
-            {/* Scan Button */}
-            <button
-                onClick={handleScan}
-                disabled={isScanning}
-                className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${useLiveMode ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/50' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/50'}`}
-            >
-                {isScanning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                {isScanning ? 'Scanning...' : useLiveMode ? 'Scan Live' : 'Scan'}
-            </button>
         </div>
     </div>
 );

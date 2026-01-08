@@ -22,20 +22,53 @@ export const Sparkline = ({
         );
     }
 
+    // Defensive: Handle different data formats (array of objects {price: x} or array of numbers [x])
+    const cleanData = data.map(item => {
+        if (typeof item === 'object' && item !== null && 'price' in item) {
+            return item.price;
+        }
+        return Number(item); // Ensure it's a number
+    }).filter(val => !isNaN(val));
+
+    if (cleanData.length < 2) {
+        return (
+            <div
+                style={{ width, height }}
+                className="bg-gray-700/30 rounded flex items-center justify-center"
+            >
+                <span className="text-gray-600 text-xs">—</span>
+            </div>
+        );
+    }
+
     // Convert array of prices to chart data format
-    const chartData = data.map((price, index) => ({
+    const chartData = cleanData.map((price, index) => ({
         value: price,
         index
     }));
 
     // Determine color based on trend (first vs last price)
-    const firstPrice = data[0];
-    const lastPrice = data[data.length - 1];
+    const firstPrice = cleanData[0];
+    const lastPrice = cleanData[cleanData.length - 1];
     const trendColor = color || (lastPrice >= firstPrice ? '#10b981' : '#ef4444');
 
     // Calculate min/max for proper Y axis
-    const minValue = Math.min(...data) * 0.995;
-    const maxValue = Math.max(...data) * 1.005;
+    const minValue = Math.min(...cleanData) * 0.995;
+    const maxValue = Math.max(...cleanData) * 1.005;
+
+    // Custom Dot Component to render only on the last point
+    const CustomizedDot = (props) => {
+        const { cx, cy, index, dataLength, stroke } = props;
+        if (index === dataLength - 1) {
+            return (
+                <svg x={cx - 4} y={cy - 4} width={8} height={8} className="overflow-visible">
+                    <circle cx="4" cy="4" r="3" fill={stroke} stroke="white" strokeWidth="1" />
+                    <circle cx="4" cy="4" r="3" fill={stroke} className="animate-ping opacity-75" />
+                </svg>
+            );
+        }
+        return null;
+    };
 
     return (
         <div style={{ width, height }} className="relative">
@@ -43,7 +76,7 @@ export const Sparkline = ({
                 data={chartData}
                 width={width}
                 height={height}
-                margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
             >
                 <defs>
                     <linearGradient id={`gradient-${trendColor.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
@@ -56,18 +89,11 @@ export const Sparkline = ({
                     type="monotone"
                     dataKey="value"
                     stroke={trendColor}
-                    strokeWidth={1.5}
-                    dot={false}
+                    strokeWidth={2}
+                    dot={<CustomizedDot dataLength={chartData.length} stroke={trendColor} />}
                     isAnimationActive={false}
                 />
             </LineChart>
-
-            {/* Trend indicator dot */}
-            <div
-                className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 rounded-full ${lastPrice >= firstPrice ? 'bg-emerald-400' : 'bg-red-400'
-                    }`}
-                style={{ boxShadow: `0 0 4px ${trendColor}` }}
-            />
         </div>
     );
 };

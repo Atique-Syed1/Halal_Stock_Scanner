@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import API_HOST, API_PORT, CORS_ORIGINS, WS_UPDATE_INTERVAL
 from .services.stock_service import load_csv_stocks, fetch_live_prices
-from .routers import scan, stocks, backtest, telegram, portfolio, alerts, news, ai, watchlist
+from .routers import scan, stocks, backtest, telegram, portfolio, alerts, news, ai, watchlist, dashboard
 from .database import create_db_and_tables
 
 
@@ -149,6 +149,7 @@ app.include_router(alerts.router)
 app.include_router(news.router)
 app.include_router(ai.router)
 app.include_router(watchlist.router)
+app.include_router(dashboard.router)
 
 
 # ====================================================================

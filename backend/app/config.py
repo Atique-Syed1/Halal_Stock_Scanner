@@ -17,14 +17,15 @@ CSV_FILE = DATA_DIR / "nse_stocks.csv"
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", "8000"))
 
-# CORS Origins
+# CORS Origins - Add production domains via CORS_ORIGINS env var
+_extra_origins = os.getenv("CORS_ORIGINS", "").split(",")
 CORS_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
-]
+] + [origin.strip() for origin in _extra_origins if origin.strip()]
 
 # ====================================================================
 # WEBSOCKET SETTINGS

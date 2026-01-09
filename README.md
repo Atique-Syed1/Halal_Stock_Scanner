@@ -139,6 +139,30 @@ VITE_WS_URL=ws://localhost:8000
 
 ---
 
+## 🌐 Deployment
+
+Deploy your app for free:
+
+| Component | Platform | Guide |
+|-----------|----------|-------|
+| Frontend | **Vercel** | Free static hosting |
+| Backend | **Railway** | Free tier with $5 credit |
+
+📖 **Full deployment instructions:** [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### Quick Deploy Steps
+
+1. **Deploy Backend to Railway**
+   - Push to GitHub → Railway auto-deploys
+   - Set `CORS_ORIGINS` env var with your Vercel URL
+
+2. **Deploy Frontend to Vercel**
+   - Import from GitHub
+   - Set `VITE_API_URL` and `VITE_WS_URL` to Railway URL
+   - Deploy!
+
+---
+
 ## 📄 License
 
 MIT License - Feel free to use and modify!

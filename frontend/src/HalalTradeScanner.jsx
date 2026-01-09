@@ -10,18 +10,24 @@ import {
     Zap,
     TrendingUp,
     Target,
-    BarChart2
+    BarChart2,
+    Moon,
+    Sun,
+    LayoutDashboard,
+    ScanLine
 } from 'lucide-react';
 
 // Import components from subfolders
-import { ConnectionStatus, ExportButton } from './components/common';
+import { ConnectionStatus, ExportButton, PWAInstallPrompt, NotificationToggle } from './components/common';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { StockTable, StockDetailPanel, WatchlistPanel, WatchlistIndicator, CompareStocks } from './components/scanner';
 import { TelegramSettings, TelegramButton, StockListSettings, StockListButton, AlertSettings } from './components/settings';
 import { Portfolio } from './components/portfolio';
+import { Dashboard } from './components/dashboard';
 
 // Import hooks
 import { useWatchlist } from './hooks/useWatchlist';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 
 // Import data utilities
@@ -45,6 +51,10 @@ const HalalTradeApp = () => {
     const [selectedStock, setSelectedStock] = useState(null);
     const [errorMsg, setErrorMsg] = useState('');
 
+    // Navigation & Theme state
+    const [activeTab, setActiveTab] = useLocalStorage('halaltrade-tab', 'dashboard');
+    const [darkMode, setDarkMode] = useLocalStorage('halaltrade-darkmode', true);
+
     // UI state
     const [watchlistOpen, setWatchlistOpen] = useState(false);
     const [telegramOpen, setTelegramOpen] = useState(false);
@@ -56,6 +66,15 @@ const HalalTradeApp = () => {
     // Data state
     const [universeInfo, setUniverseInfo] = useState({ count: 25, name: 'Default' });
     const [telegramEnabled, setTelegramEnabled] = useState(false);
+
+    // Apply dark/light mode to document
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.remove('light-mode');
+        } else {
+            document.documentElement.classList.add('light-mode');
+        }
+    }, [darkMode]);
 
 
 
@@ -261,68 +280,169 @@ const HalalTradeApp = () => {
         : stocks;
 
     return (
-        <div className="min-h-screen bg-gray-900 text-gray-100 font-sans p-4 md:p-8">
-            {/* HEADER */}
-            <Header
-                useLiveMode={useLiveMode}
-                setUseLiveMode={setUseLiveMode}
-                showHalalOnly={showHalalOnly}
-                setShowHalalOnly={setShowHalalOnly}
-                isScanning={isScanning}
-                handleScan={handleScan}
-                wsConnected={wsConnected}
-                wsConnecting={wsConnecting}
-                lastUpdate={lastUpdate}
-                watchlistCount={watchlistCount}
-                onOpenWatchlist={() => setWatchlistOpen(true)}
-                telegramEnabled={telegramEnabled}
-                onOpenTelegram={() => setTelegramOpen(true)}
+        <div className={`min-h-screen bg-gray-900 text-gray-100 font-sans`}>
+            {/* TOP NAVIGATION BAR */}
+            <nav className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700/50">
+                <div className="max-w-7xl mx-auto px-4 py-3">
+                    <div className="flex items-center justify-between">
+                        {/* LOGO & TABS */}
+                        <div className="flex items-center gap-8">
+                            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-2">
+                                <ShieldCheck className="w-7 h-7 text-emerald-400" />
+                                HalalTrade Pro
+                            </h1>
+                            
+                            {/* Navigation Tabs */}
+                            <div className="hidden md:flex items-center gap-1 bg-gray-800/50 rounded-lg p-1">
+                                <button
+                                    onClick={() => setActiveTab('dashboard')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                        activeTab === 'dashboard'
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                    }`}
+                                >
+                                    <LayoutDashboard size={16} />
+                                    Dashboard
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('scanner')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                        activeTab === 'scanner'
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                    }`}
+                                >
+                                    <ScanLine size={16} />
+                                    Scanner
+                                </button>
+                            </div>
+                        </div>
 
-                stockListCount={universeInfo.count}
-                onOpenStockList={() => setStockListOpen(true)}
-                onOpenPortfolio={() => setPortfolioOpen(true)}
-                onOpenAlerts={() => setAlertOpen(true)}
-                onOpenCompare={() => setCompareOpen(true)}
-                stocks={stocks}
-            />
+                        {/* RIGHT SIDE CONTROLS */}
+                        <div className="flex items-center gap-3">
+                            {/* Live Mode Badge */}
+                            {useLiveMode && wsConnected && (
+                                <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border bg-emerald-500/10 border-emerald-500/30 text-emerald-500">
+                                    <Wifi className="w-3 h-3 animate-pulse" />
+                                    Live
+                                </div>
+                            )}
 
-            {/* ERROR MESSAGE */}
-            {errorMsg && <ErrorBanner message={errorMsg} />}
+                            {/* Notification Toggle */}
+                            <NotificationToggle />
 
-            {/* STATS CARDS */}
-            <StatsCards
-                stocks={stocks}
-                useLiveMode={useLiveMode}
-                priceUpdates={priceUpdates}
-            />
+                            {/* Dark Mode Toggle */}
+                            <button
+                                onClick={() => setDarkMode(!darkMode)}
+                                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all"
+                                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                            >
+                                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                            </button>
+
+                            {/* Mobile Tabs */}
+                            <div className="flex md:hidden items-center gap-1 bg-gray-800/50 rounded-lg p-1">
+                                <button
+                                    onClick={() => setActiveTab('dashboard')}
+                                    className={`p-2 rounded-md transition-all ${
+                                        activeTab === 'dashboard'
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'text-gray-400'
+                                    }`}
+                                >
+                                    <LayoutDashboard size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('scanner')}
+                                    className={`p-2 rounded-md transition-all ${
+                                        activeTab === 'scanner'
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'text-gray-400'
+                                    }`}
+                                >
+                                    <ScanLine size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
             {/* MAIN CONTENT */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <StockTable
-                    stocks={displayedStocks}
-                    selectedStock={selectedStock}
-                    onSelectStock={setSelectedStock}
-                    previousPrices={previousPrices}
-                    useLiveMode={useLiveMode}
-                    wsConnected={wsConnected}
-                    isInWatchlist={isInWatchlist}
-                    onToggleWatchlist={toggleWatchlist}
-                />
-
-                <div className="flex flex-col gap-4">
-                    {selectedStock ? (
+            <main className="p-4 md:p-8">
+                {activeTab === 'dashboard' ? (
+                    <div className="max-w-7xl mx-auto">
                         <ErrorBoundary>
-                            <StockDetailPanel
-                                stock={selectedStock}
+                            <Dashboard onNavigateToScanner={() => setActiveTab('scanner')} />
+                        </ErrorBoundary>
+                    </div>
+                ) : (
+                    <>
+                        {/* SCANNER HEADER */}
+                        <Header
+                            useLiveMode={useLiveMode}
+                            setUseLiveMode={setUseLiveMode}
+                            showHalalOnly={showHalalOnly}
+                            setShowHalalOnly={setShowHalalOnly}
+                            isScanning={isScanning}
+                            handleScan={handleScan}
+                            wsConnected={wsConnected}
+                            wsConnecting={wsConnecting}
+                            lastUpdate={lastUpdate}
+                            watchlistCount={watchlistCount}
+                            onOpenWatchlist={() => setWatchlistOpen(true)}
+                            telegramEnabled={telegramEnabled}
+                            onOpenTelegram={() => setTelegramOpen(true)}
+
+                            stockListCount={universeInfo.count}
+                            onOpenStockList={() => setStockListOpen(true)}
+                            onOpenPortfolio={() => setPortfolioOpen(true)}
+                            onOpenAlerts={() => setAlertOpen(true)}
+                            onOpenCompare={() => setCompareOpen(true)}
+                            stocks={stocks}
+                        />
+
+                        {/* ERROR MESSAGE */}
+                        {errorMsg && <ErrorBanner message={errorMsg} />}
+
+                        {/* STATS CARDS */}
+                        <StatsCards
+                            stocks={stocks}
+                            useLiveMode={useLiveMode}
+                            priceUpdates={priceUpdates}
+                        />
+
+                        {/* MAIN CONTENT */}
+                        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <StockTable
+                                stocks={displayedStocks}
+                                selectedStock={selectedStock}
+                                onSelectStock={setSelectedStock}
+                                previousPrices={previousPrices}
                                 useLiveMode={useLiveMode}
                                 wsConnected={wsConnected}
+                                isInWatchlist={isInWatchlist}
+                                onToggleWatchlist={toggleWatchlist}
                             />
-                        </ErrorBoundary>
-                    ) : (
-                        <EmptyDetailPanel />
-                    )}
-                </div>
-            </div>
+
+                            <div className="flex flex-col gap-4">
+                                {selectedStock ? (
+                                    <ErrorBoundary>
+                                        <StockDetailPanel
+                                            stock={selectedStock}
+                                            useLiveMode={useLiveMode}
+                                            wsConnected={wsConnected}
+                                        />
+                                    </ErrorBoundary>
+                                ) : (
+                                    <EmptyDetailPanel />
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
+            </main>
 
             {/* WATCHLIST MODAL */}
             <WatchlistPanel
@@ -375,12 +495,15 @@ const HalalTradeApp = () => {
                 onClose={() => setCompareOpen(false)}
                 stocks={stocks}
             />
+
+            {/* PWA Install Prompt */}
+            <PWAInstallPrompt />
         </div>
     );
 };
 
 /**
- * Header Component
+ * Header Component (Scanner Tab Only)
  */
 const Header = ({
     useLiveMode, setUseLiveMode,

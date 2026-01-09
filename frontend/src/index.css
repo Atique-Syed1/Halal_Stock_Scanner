@@ -16,6 +16,70 @@
   --gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
   --gradient-dark: linear-gradient(180deg, #111827 0%, #0f172a 100%);
   --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  
+  /* Theme Colors - Dark Mode (Default) */
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --border-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Light Mode Theme */
+.light-mode {
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --border-color: rgba(209, 213, 219, 0.8);
+  --gradient-dark: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.light-mode body,
+.light-mode .bg-gray-900 {
+  background: var(--gradient-dark) !important;
+}
+
+.light-mode .bg-gray-800,
+.light-mode .bg-gray-800\/50,
+.light-mode .bg-gray-800\/40 {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.light-mode .text-gray-100,
+.light-mode .text-white {
+  color: var(--text-primary) !important;
+}
+
+.light-mode .text-gray-400,
+.light-mode .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+.light-mode .border-gray-700,
+.light-mode .border-gray-700\/50,
+.light-mode .border-gray-600 {
+  border-color: var(--border-color) !important;
+}
+
+.light-mode .glass-card,
+.light-mode .stat-card {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode ::-webkit-scrollbar-track {
+  background: #e5e7eb;
+}
+
+.light-mode ::-webkit-scrollbar-thumb {
+  background: #9ca3af;
 }
 
 /* Base Styles */
@@ -476,4 +540,32 @@ textarea:focus {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(107, 114, 128, 1);
+}
+
+/* ====================================================================
+   PWA ANIMATIONS
+   ==================================================================== */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+/* ====================================================================
+   CANDLESTICK CHART ENHANCEMENTS
+   ==================================================================== */
+
+.tv-lightweight-charts {
+  border-radius: 8px;
+  overflow: hidden;
 }

@@ -53,6 +53,9 @@ export const API = {
     WATCHLIST: `${API_BASE}/api/watchlist`,
     WATCHLIST_ITEM: (symbol) => `${API_BASE}/api/watchlist/${symbol}`,
 
+    // Dashboard
+    DASHBOARD: `${API_BASE}/api/dashboard`,
+    DASHBOARD_PERFORMANCE: (period) => `${API_BASE}/api/dashboard/performance?period=${period}`,
 
     // Health check
     HEALTH: `${API_BASE}/api/health`,

@@ -14,13 +14,15 @@ import {
     Moon,
     Sun,
     LayoutDashboard,
-    ScanLine
+    ScanLine,
+    Command
 } from 'lucide-react';
 
 // Import components from subfolders
 import { ConnectionStatus, ExportButton, PWAInstallPrompt, NotificationToggle, PageLoadingSkeleton, ModalSkeleton } from './components/common';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { StockTable, WatchlistPanel, WatchlistIndicator } from './components/scanner';
+import { CommandPalette } from './components/common/CommandPalette';
 
 // Lazy load heavy components for code splitting
 const Dashboard = lazy(() => import('./components/dashboard/Dashboard'));
@@ -38,6 +40,7 @@ const StockListButton = lazy(() => import('./components/settings/StockListSettin
 // Import hooks
 import { useWatchlist } from './hooks/useWatchlist';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 
 // Import data utilities
@@ -68,6 +71,7 @@ const HalalTradeApp = () => {
     // UI state
     const [watchlistOpen, setWatchlistOpen] = useState(false);
     const [telegramOpen, setTelegramOpen] = useState(false);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [stockListOpen, setStockListOpen] = useState(false);
     const [portfolioOpen, setPortfolioOpen] = useState(false);
     const [alertOpen, setAlertOpen] = useState(false);
@@ -86,7 +90,17 @@ const HalalTradeApp = () => {
         }
     }, [darkMode]);
 
-
+    // Keyboard shortcuts
+    useKeyboardShortcuts({
+        'ctrl+k': () => setCommandPaletteOpen(true),
+        'ctrl+1': () => setActiveTab('dashboard'),
+        'ctrl+2': () => setActiveTab('scanner'),
+        'ctrl+shift+t': () => setDarkMode(!darkMode),
+        'escape': () => {
+            if (commandPaletteOpen) setCommandPaletteOpen(false);
+            else if (selectedStock) setSelectedStock(null);
+        }
+    });
 
     // Fetch basic info on mount
     useEffect(() => {
@@ -331,6 +345,17 @@ const HalalTradeApp = () => {
 
                         {/* RIGHT SIDE CONTROLS */}
                         <div className="flex items-center gap-3">
+                            {/* Search Button (Command Palette) */}
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 transition-all"
+                                title="Search (Ctrl+K)"
+                            >
+                                <Search size={14} />
+                                <span className="text-sm">Search</span>
+                                <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-700 rounded">⌘K</kbd>
+                            </button>
+
                             {/* Live Mode Badge */}
                             {useLiveMode && wsConnected && (
                                 <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border bg-emerald-500/10 border-emerald-500/30 text-emerald-500">
@@ -528,6 +553,24 @@ const HalalTradeApp = () => {
                     />
                 </Suspense>
             )}
+
+            {/* COMMAND PALETTE (Ctrl+K) */}
+            <CommandPalette
+                isOpen={commandPaletteOpen}
+                onClose={() => setCommandPaletteOpen(false)}
+                stocks={stocks}
+                onSelectStock={(stock) => {
+                    setSelectedStock(stock);
+                    setActiveTab('scanner');
+                }}
+                onNavigate={(tab) => {
+                    if (tab === 'portfolio') setPortfolioOpen(true);
+                    else if (tab === 'alerts') setAlertOpen(true);
+                    else setActiveTab(tab);
+                }}
+                onToggleTheme={() => setDarkMode(!darkMode)}
+                darkMode={darkMode}
+            />
 
             {/* PWA Install Prompt */}
             <PWAInstallPrompt />

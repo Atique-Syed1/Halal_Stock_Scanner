@@ -17,6 +17,7 @@ import {
     Zap
 } from 'lucide-react';
 import API from '../../config/api';
+import { DashboardSkeleton } from '../common/LoadingSkeleton';
 
 /**
  * ====================================================================
@@ -314,14 +315,7 @@ const Dashboard = ({ onNavigateToScanner }) => {
     }, [fetchDashboard]);
 
     if (loading && !dashboardData) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <RefreshCw size={32} className="text-emerald-400 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-400">Loading dashboard...</p>
-                </div>
-            </div>
-        );
+        return <DashboardSkeleton />;
     }
 
     if (error && !dashboardData) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Activity, Radio, BarChart2, Newspaper, Bot } from 'lucide-react';
 import { MAX_DEBT_RATIO, MAX_CASH_RATIO } from '../../data/stockData';
-import { InteractiveChart } from '../common/InteractiveChart'; // Import new chart
+import { AdvancedChart } from '../common/AdvancedChart';
 import { BacktestModal, BacktestButton } from '../backtest/Backtest';
 import { NewsPanel } from './NewsPanel';
 import { AIAnalystModal } from './AIAnalyst';
@@ -13,7 +13,6 @@ export const StockDetailPanel = ({ stock, useLiveMode, wsConnected }) => {
     const [backtestOpen, setBacktestOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('news'); // Default to News to match screenshot for first impression
     const [aiOpen, setAiOpen] = useState(false);
-    const [timeRange, setTimeRange] = useState('1Y');
 
     if (!stock) return null;
 
@@ -52,31 +51,15 @@ export const StockDetailPanel = ({ stock, useLiveMode, wsConnected }) => {
                 stock={stock}
             />
 
-            {/* Price Action Chart Card */}
-            <div className="bg-gray-900/50 rounded-xl p-4 mb-6 border border-gray-700/50">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        Price Action (1Y)
-                    </h3>
-                    <div className="flex bg-gray-800 rounded-lg p-0.5 border border-gray-700">
-                        {['1D', '5D', '1M', '3M', '1Y'].map((range) => (
-                            <button
-                                key={range}
-                                onClick={() => setTimeRange(range)}
-                                className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${timeRange === range
-                                    ? 'bg-blue-600 text-white shadow-sm'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                                    }`}
-                            >
-                                {range}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div className="h-[200px] w-full">
-                    {/* Passing explicit true to hide controls inside chart since we have them outside now */}
-                    <InteractiveChart symbol={stock.symbol} height={200} hideControls={true} selectedPeriod={timeRange} />
-                </div>
+            {/* Advanced TradingView-style Chart */}
+            <div className="mb-6">
+                <AdvancedChart 
+                    symbol={stock.symbol} 
+                    height={280} 
+                    showVolume={true}
+                    showIndicators={true}
+                    defaultPeriod="1y"
+                />
             </div>
 
             {/* Tabs */}

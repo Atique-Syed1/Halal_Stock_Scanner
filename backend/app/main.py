@@ -11,6 +11,7 @@ from .config import API_HOST, API_PORT, CORS_ORIGINS, WS_UPDATE_INTERVAL
 from .services.stock_service import load_csv_stocks, fetch_live_prices
 from .routers import scan, stocks, backtest, telegram, portfolio, alerts, news, ai, watchlist, dashboard
 from .database import create_db_and_tables
+from .middleware import RateLimitMiddleware
 
 
 # ====================================================================
@@ -139,6 +140,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate Limiting Middleware
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=120,  # 120 requests per minute per IP
+    requests_per_second=10,   # Max 10 requests per second burst
+    burst_size=20,            # Allow bursts of up to 20 requests
+    exclude_paths=["/health", "/docs", "/openapi.json", "/api/ws"]
+)
+
 # Include Routers
 app.include_router(scan.router)
 app.include_router(stocks.router)
@@ -160,15 +170,18 @@ def root():
     return {
         "app": "HalalTrade Pro API",
         "version": "2.0.0",
-        "status": "running"
+        "status": "running",
+        "features": ["rate_limiting", "websocket", "alerts", "ai_analysis"]
     }
 
 
+@app.get("/health")
 @app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
-        "websocket_clients": len(manager.active_connections)
+        "websocket_clients": len(manager.active_connections),
+        "rate_limiting": "enabled"
     }
 
 

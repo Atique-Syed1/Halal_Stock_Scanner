@@ -8,18 +8,63 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split vendor chunks
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-lightweight-charts': ['lightweight-charts'],
-          'vendor-recharts': ['recharts'],
-          'vendor-icons': ['lucide-react'],
-          'vendor-html2canvas': ['html2canvas'],
-          'vendor-dompurify': ['dompurify'],
+        manualChunks: (id) => {
+          // Node modules chunking
+          if (id.includes('node_modules')) {
+            // React core
+            if (id.includes('react-dom') || id.includes('/react/')) {
+              return 'vendor-react';
+            }
+            // Charts
+            if (id.includes('lightweight-charts')) {
+              return 'vendor-lightweight-charts';
+            }
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-recharts';
+            }
+            // Icons
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            // Export utilities
+            if (id.includes('html2canvas')) {
+              return 'vendor-html2canvas';
+            }
+            if (id.includes('jspdf')) {
+              return 'vendor-jspdf';
+            }
+            // Markdown & sanitization
+            if (id.includes('dompurify') || id.includes('react-markdown') || id.includes('remark') || id.includes('unified') || id.includes('micromark') || id.includes('mdast') || id.includes('hast')) {
+              return 'vendor-markdown';
+            }
+            // i18n
+            if (id.includes('i18next')) {
+              return 'vendor-i18n';
+            }
+            // Other smaller vendor libs
+            return 'vendor-misc';
+          }
+          
+          // App code chunking by feature
+          if (id.includes('/components/dashboard/')) {
+            return 'feature-dashboard';
+          }
+          if (id.includes('/components/scanner/')) {
+            return 'feature-scanner';
+          }
+          if (id.includes('/components/portfolio/')) {
+            return 'feature-portfolio';
+          }
+          if (id.includes('/components/settings/')) {
+            return 'feature-settings';
+          }
+          if (id.includes('/components/backtest/')) {
+            return 'feature-backtest';
+          }
         },
       },
     },
-    // Increase warning limit slightly (we'll still optimize)
-    chunkSizeWarningLimit: 600,
+    // Increase warning limit (after optimization)
+    chunkSizeWarningLimit: 500,
   },
 })

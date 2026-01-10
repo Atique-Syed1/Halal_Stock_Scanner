@@ -7,7 +7,7 @@ from pathlib import Path
 # ====================================================================
 # PATHS
 # ====================================================================
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 CSV_FILE = DATA_DIR / "nse_stocks.csv"
 

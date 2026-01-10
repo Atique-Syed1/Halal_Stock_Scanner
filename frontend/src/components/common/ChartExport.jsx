@@ -3,6 +3,51 @@ import { useTranslation } from 'react-i18next';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+// Convert oklch colors to rgb for html2canvas compatibility
+const convertOklchToRgb = (element) => {
+  const clone = element.cloneNode(true);
+  const allElements = clone.querySelectorAll('*');
+  
+  const convertColor = (color) => {
+    if (!color || !color.includes('oklch')) return color;
+    // Replace oklch colors with fallback hex colors
+    const colorMap = {
+      'oklch(0.723 0.219 149.579)': '#10b981', // emerald-500
+      'oklch(0.765 0.177 163.223)': '#34d399', // emerald-400
+      'oklch(0.627 0.258 29.234)': '#ef4444',  // red-500
+      'oklch(0.704 0.191 22.216)': '#f87171',  // red-400
+      'oklch(0.577 0.245 27.325)': '#dc2626',  // red-600
+      'oklch(0.551 0.027 264.364)': '#6b7280', // gray-500
+      'oklch(0.446 0.03 256.802)': '#4b5563',  // gray-600
+      'oklch(0.373 0.034 259.733)': '#374151', // gray-700
+      'oklch(0.278 0.033 256.848)': '#1f2937', // gray-800
+      'oklch(0.21 0.034 264.665)': '#111827',  // gray-900
+    };
+    
+    for (const [oklch, hex] of Object.entries(colorMap)) {
+      if (color.includes(oklch.slice(0, 20))) {
+        return hex;
+      }
+    }
+    return '#333333'; // Default fallback
+  };
+  
+  allElements.forEach(el => {
+    const style = window.getComputedStyle(el);
+    if (style.color?.includes('oklch')) {
+      el.style.color = convertColor(style.color);
+    }
+    if (style.backgroundColor?.includes('oklch')) {
+      el.style.backgroundColor = convertColor(style.backgroundColor);
+    }
+    if (style.borderColor?.includes('oklch')) {
+      el.style.borderColor = convertColor(style.borderColor);
+    }
+  });
+  
+  return clone;
+};
+
 const ChartExport = ({ chartRef, filename = 'chart', title = '' }) => {
   const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
@@ -13,12 +58,36 @@ const ChartExport = ({ chartRef, filename = 'chart', title = '' }) => {
     
     setIsExporting(true);
     try {
-      const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2, // Higher resolution
+      // Create a temporary container with fixed colors
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.backgroundColor = '#1f2937';
+      
+      const clone = chartRef.current.cloneNode(true);
+      tempContainer.appendChild(clone);
+      document.body.appendChild(tempContainer);
+      
+      const canvas = await html2canvas(clone, {
+        backgroundColor: '#1f2937',
+        scale: 2,
         logging: false,
         useCORS: true,
+        removeContainer: false,
+        // Ignore oklch color parsing errors
+        onclone: (clonedDoc, element) => {
+          const style = document.createElement('style');
+          style.textContent = `
+            * { 
+              color: inherit !important;
+              background-color: inherit !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
       });
+      
+      document.body.removeChild(tempContainer);
       
       const link = document.createElement('a');
       link.download = `${filename}-${new Date().toISOString().split('T')[0]}.png`;
@@ -26,6 +95,25 @@ const ChartExport = ({ chartRef, filename = 'chart', title = '' }) => {
       link.click();
     } catch (error) {
       console.error('Error exporting PNG:', error);
+      // Fallback: try to export without color processing
+      try {
+        const canvas = await html2canvas(chartRef.current, {
+          backgroundColor: '#1f2937',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          ignoreElements: (element) => {
+            return element.tagName === 'STYLE';
+          }
+        });
+        const link = document.createElement('a');
+        link.download = `${filename}-${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (fallbackError) {
+        console.error('Fallback export also failed:', fallbackError);
+        alert('Export failed. The chart uses modern CSS colors not supported by the export library.');
+      }
     } finally {
       setIsExporting(false);
       setShowMenu(false);
@@ -37,12 +125,23 @@ const ChartExport = ({ chartRef, filename = 'chart', title = '' }) => {
     
     setIsExporting(true);
     try {
-      const canvas = await html2canvas(chartRef.current, {
-        backgroundColor: '#ffffff',
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.backgroundColor = '#1f2937';
+      
+      const clone = chartRef.current.cloneNode(true);
+      tempContainer.appendChild(clone);
+      document.body.appendChild(tempContainer);
+      
+      const canvas = await html2canvas(clone, {
+        backgroundColor: '#1f2937',
         scale: 2,
         logging: false,
         useCORS: true,
       });
+      
+      document.body.removeChild(tempContainer);
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -73,6 +172,7 @@ const ChartExport = ({ chartRef, filename = 'chart', title = '' }) => {
       pdf.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('Error exporting PDF:', error);
+      alert('PDF export failed. The chart uses modern CSS colors not supported by the export library.');
     } finally {
       setIsExporting(false);
       setShowMenu(false);

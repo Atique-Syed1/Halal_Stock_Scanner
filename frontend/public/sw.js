@@ -94,7 +94,9 @@ self.addEventListener('fetch', (event) => {
   // Skip WebSocket upgrades
   if (event.request.url.includes('/ws/')) return;
 
+  // Skip chrome-extension and other non-http(s) URLs
   const url = event.request.url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return;
 
   // Handle cacheable API requests - Network first, cache fallback
   if (isCacheableAPI(url)) {

@@ -89,37 +89,48 @@ export const CompareStocks = ({ isOpen, onClose, stocks }) => {
 };
 
 const StockColumn = ({ stock, color }) => {
+    // Guard against missing data
+    if (!stock) return null;
+
+    const technicals = stock.technicals || {};
     const isHalal = stock.shariahStatus === 'Halal';
-    const signalColor = stock.technicals.signal === 'Buy' ? 'text-green-400' : stock.technicals.signal === 'Sell' ? 'text-red-400' : 'text-gray-400';
+    const signal = technicals.signal || 'Hold';
+    const signalColor = signal === 'Buy' ? 'text-green-400' : signal === 'Sell' ? 'text-red-400' : 'text-gray-400';
 
     // Calculate Risk/Reward if Buy
     let rr = '-';
-    if (stock.technicals.signal === 'Buy') {
-        const risk = stock.price - stock.technicals.sl;
-        const reward = stock.technicals.tp - stock.price;
+    if (signal === 'Buy' && technicals.sl && technicals.tp) {
+        const risk = Number(stock.price || 0) - Number(technicals.sl);
+        const reward = Number(technicals.tp) - Number(stock.price || 0);
         if (risk > 0) rr = `1:${(reward / risk).toFixed(1)}`;
     }
+
+    // Helper to safely format numbers
+    const formatNum = (val, decimals = 1) => {
+        const num = Number(val);
+        return isNaN(num) ? '-' : num.toFixed(decimals);
+    };
 
     return (
         <div className={`text-center space-y-4 rounded-xl bg-${color}-900/10 border border-${color}-900/30 p-4`}>
             <div className="mb-8">
-                <div className="text-2xl font-bold text-white">{stock.symbol}</div>
-                <div className="text-xs text-gray-400">{stock.name}</div>
+                <div className="text-2xl font-bold text-white">{stock.symbol || '-'}</div>
+                <div className="text-xs text-gray-400">{stock.name || '-'}</div>
             </div>
 
-            <Metric value={`₹${stock.price.toFixed(1)}`} />
+            <Metric value={`₹${formatNum(stock.price)}`} />
             <Metric
-                value={`${stock.priceChange >= 0 ? '+' : ''}${stock.priceChangePercent?.toFixed(2)}%`}
-                className={stock.priceChange >= 0 ? 'text-green-400' : 'text-red-400'}
+                value={`${Number(stock.priceChange || 0) >= 0 ? '+' : ''}${formatNum(stock.priceChangePercent, 2)}%`}
+                className={Number(stock.priceChange || 0) >= 0 ? 'text-green-400' : 'text-red-400'}
             />
-            <Metric value={stock.technicals.rsi.toFixed(1)} />
-            <Metric value={stock.technicals.macd.toFixed(2)} />
-            <Metric value={stock.technicals.signal.toUpperCase()} className={`font-bold ${signalColor}`} />
+            <Metric value={formatNum(technicals.rsi)} />
+            <Metric value={formatNum(technicals.macd, 2)} />
+            <Metric value={signal.toUpperCase()} className={`font-bold ${signalColor}`} />
             <Metric
-                value={stock.shariahStatus}
+                value={stock.shariahStatus || '-'}
                 className={`font-bold px-2 py-0.5 rounded-full inline-block text-xs ${isHalal ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
             />
-            <Metric value={stock.technicals.signal === 'Buy' ? `₹${stock.technicals.tp}` : '-'} className="text-green-300" />
+            <Metric value={signal === 'Buy' && technicals.tp ? `₹${formatNum(technicals.tp)}` : '-'} className="text-green-300" />
             <Metric value={rr} />
         </div>
     );

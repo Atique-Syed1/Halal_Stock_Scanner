@@ -12,13 +12,49 @@ export default defineConfig({
     },
   },
   build: {
+    // Target modern browsers for smaller bundles
+    target: 'es2020',
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Minify CSS
+    cssMinify: 'esbuild',
+    // Generate sourcemaps for debugging (can disable in production)
+    sourcemap: false,
     rollupOptions: {
       output: {
-        // Let Vite handle chunking automatically to avoid load order issues
-        manualChunks: undefined,
+        manualChunks: {
+          // Core React runtime - cached across all pages
+          'vendor-react': ['react', 'react-dom'],
+
+          // Charting libraries - loaded only when charts are needed
+          'vendor-charts': ['recharts', 'lightweight-charts'],
+
+          // PDF generation - loaded only when exporting
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+
+          // Internationalization - loaded on first render
+          'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+
+          // Icons - used across the app
+          'vendor-icons': ['lucide-react'],
+
+          // Markdown parsing - loaded only when AI Analyst is used
+          'vendor-markdown': ['react-markdown'],
+        },
       },
     },
-    // Increase warning limit
-    chunkSizeWarningLimit: 1000,
+    // Reduced warning limit now that we're properly splitting
+    chunkSizeWarningLimit: 550,
+  },
+  // Test configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'src/test/'],
+    },
   },
 })

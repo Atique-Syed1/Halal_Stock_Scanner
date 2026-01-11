@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
 import { ShieldCheck, ShieldAlert, TrendingUp, TrendingDown, Radio, Wifi } from 'lucide-react';
-import { LivePriceCell } from '../common/LivePriceCell';
 import { Sparkline } from '../common/Sparkline';
 import { WatchlistButton } from './Watchlist';
 
+// Row height for virtualization
+const ROW_HEIGHT = 72;
+// Number of rows to render outside visible area
+const OVERSCAN = 5;
+
 /**
- * Stock Table Component - Displays list of stocks with prices, charts, and signals
+ * Stock Table Component - Simple virtualization for performance
  */
 export const StockTable = ({
     stocks,
@@ -14,18 +18,44 @@ export const StockTable = ({
     previousPrices,
     useLiveMode,
     wsConnected,
-    // Watchlist props
     isInWatchlist,
     onToggleWatchlist
 }) => {
+    const containerRef = useRef(null);
+    const [scrollTop, setScrollTop] = useState(0);
+    const [containerHeight, setContainerHeight] = useState(600);
+
     // Sort: Buy signals first
-    const sortedStocks = [...stocks].sort((a, b) => {
+    const sortedStocks = useMemo(() => [...stocks].sort((a, b) => {
         const signalA = a?.technicals?.signal;
         const signalB = b?.technicals?.signal;
         if (signalA === 'Buy' && signalB !== 'Buy') return -1;
         if (signalB === 'Buy' && signalA !== 'Buy') return 1;
         return 0;
-    });
+    }), [stocks]);
+
+    // Handle scroll
+    const handleScroll = useCallback((e) => {
+        setScrollTop(e.target.scrollTop);
+    }, []);
+
+    // Measure container height on mount
+    useEffect(() => {
+        if (containerRef.current) {
+            setContainerHeight(containerRef.current.clientHeight);
+        }
+    }, []);
+
+    // Calculate visible range
+    const totalHeight = sortedStocks.length * ROW_HEIGHT;
+    const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+    const endIndex = Math.min(
+        sortedStocks.length,
+        Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + OVERSCAN
+    );
+
+    // Get visible stocks
+    const visibleStocks = sortedStocks.slice(startIndex, endIndex);
 
     return (
         <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden">
@@ -49,8 +79,8 @@ export const StockTable = ({
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
+            {/* Table Content */}
+            <div className="overflow-hidden">
                 {stocks.length === 0 ? (
                     <div className="p-16 text-center text-gray-500 animate-fade-in">
                         <div className="w-16 h-16 rounded-full bg-gray-800/50 flex items-center justify-center mx-auto mb-4 border border-gray-700/50">
@@ -64,41 +94,51 @@ export const StockTable = ({
                         </p>
                     </div>
                 ) : (
-                    <table className="w-full text-left text-sm border-separate border-spacing-y-1 px-2">
-                        <thead className="text-gray-500 uppercase text-[11px] tracking-wider font-semibold sticky top-0 backdrop-blur-md bg-gray-900/90 z-10">
-                            <tr>
-                                <th className="py-4 px-6 w-10"></th>
-                                <th className="py-4 px-6">Stock</th>
-                                <th className="py-4 px-6">Price <span className="text-emerald-500 ml-1">●</span></th>
-                                <th className="py-4 px-6 text-center">Trend</th>
-                                <th className="py-4 px-6 text-center">Shariah</th>
-                                <th className="py-4 px-6 text-center">RSI</th>
-                                <th className="py-4 px-6 text-right">Signal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sortedStocks.map((stock, index) => (
-                                <StockRow
-                                    key={stock.symbol}
-                                    stock={stock}
-                                    isSelected={selectedStock?.symbol === stock.symbol}
-                                    onSelect={() => onSelectStock(stock)}
-                                    previousPrice={previousPrices[stock.symbol]}
-                                    isLive={useLiveMode && wsConnected}
-                                    isWatched={isInWatchlist?.(stock.symbol)}
-                                    onToggleWatchlist={() => onToggleWatchlist?.(stock)}
-                                    className={`
-                                        cursor-pointer transition-all duration-200 group
-                                        animate-enter opacity-0 fill-mode-forwards
-                                        ${selectedStock?.symbol === stock.symbol
-                                            ? 'bg-blue-900/10 border-l-4 border-blue-500 shadow-lg shadow-blue-900/10'
-                                            : 'hover:bg-gray-800/40 border-l-4 border-transparent hover:border-gray-700'}
-                                    `}
-                                    style={{ animationDelay: `${index * 50}ms` }}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
+                    <>
+                        {/* Column Headers */}
+                        <div className="flex items-center py-3 px-2 text-gray-500 uppercase text-[11px] tracking-wider font-semibold bg-gray-900/90 border-b border-gray-800/50 sticky top-0 z-10">
+                            <div className="w-12 flex-shrink-0"></div>
+                            <div className="flex-1 min-w-[120px] px-3">Stock</div>
+                            <div className="w-28 px-3">Price <span className="text-emerald-500 ml-1">●</span></div>
+                            <div className="w-28 px-3 text-center">Trend</div>
+                            <div className="w-24 px-3 text-center">Shariah</div>
+                            <div className="w-16 px-3 text-center">RSI</div>
+                            <div className="w-24 px-3 text-right">Signal</div>
+                        </div>
+
+                        {/* Virtualized Scroll Container */}
+                        <div
+                            ref={containerRef}
+                            onScroll={handleScroll}
+                            className="overflow-y-auto custom-scrollbar"
+                            style={{ height: Math.min(600, totalHeight) }}
+                        >
+                            {/* Spacer for total scrollable height */}
+                            <div style={{ height: totalHeight, position: 'relative' }}>
+                                {/* Only render visible rows */}
+                                {visibleStocks.map((stock, i) => {
+                                    const actualIndex = startIndex + i;
+                                    return (
+                                        <StockRow
+                                            key={stock.symbol}
+                                            stock={stock}
+                                            isSelected={selectedStock?.symbol === stock.symbol}
+                                            onSelect={() => onSelectStock(stock)}
+                                            isWatched={isInWatchlist?.(stock.symbol)}
+                                            onToggleWatchlist={() => onToggleWatchlist?.(stock)}
+                                            style={{
+                                                position: 'absolute',
+                                                top: actualIndex * ROW_HEIGHT,
+                                                left: 0,
+                                                right: 0,
+                                                height: ROW_HEIGHT
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
@@ -106,26 +146,43 @@ export const StockTable = ({
 };
 
 /**
- * Individual Stock Row
+ * Individual Stock Row - Memoized for performance
  */
-const StockRow = ({ stock, isSelected, onSelect, previousPrice, isLive, isWatched, onToggleWatchlist, className, style }) => (
-    <tr
-        onClick={onSelect}
-        className={className}
+const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchlist, style }) => (
+    <div
         style={style}
+        onClick={onSelect}
+        className={`
+            flex items-center cursor-pointer transition-all duration-200 group border-b border-gray-800/30
+            ${isSelected
+                ? 'bg-blue-900/20 border-l-4 border-l-blue-500 shadow-lg shadow-blue-900/10'
+                : 'hover:bg-gray-800/40 border-l-4 border-l-transparent hover:border-l-gray-700'}
+        `}
     >
-        <td className="py-4 px-4 pl-6">
+        {/* Watchlist */}
+        <div className="w-12 flex-shrink-0 flex items-center justify-center">
             <WatchlistButton
                 isWatched={isWatched}
-                onClick={onToggleWatchlist}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleWatchlist?.();
+                }}
                 size="sm"
             />
-        </td>
-        <td className="py-4 px-6">
-            <div className="font-bold text-white text-base tracking-tight group-hover:text-blue-400 transition-colors">{stock.symbol}</div>
-            <div className="text-[11px] text-gray-500 font-medium mt-0.5 uppercase tracking-wide truncate max-w-[140px]">{stock.name}</div>
-        </td>
-        <td className="py-4 px-6">
+        </div>
+
+        {/* Stock Name */}
+        <div className="flex-1 min-w-[120px] px-3">
+            <div className="font-bold text-white text-base tracking-tight group-hover:text-blue-400 transition-colors">
+                {stock.symbol}
+            </div>
+            <div className="text-[11px] text-gray-500 font-medium mt-0.5 uppercase tracking-wide truncate max-w-[140px]">
+                {stock.name}
+            </div>
+        </div>
+
+        {/* Price */}
+        <div className="w-28 px-3">
             <div className="font-mono text-[15px] font-medium text-gray-200">
                 ₹{Number(stock.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
@@ -134,69 +191,71 @@ const StockRow = ({ stock, isSelected, onSelect, previousPrice, isLive, isWatche
                     {stock.priceChange >= 0 ? '+' : ''}{stock.priceChangePercent?.toFixed(2)}%
                 </div>
             )}
-        </td>
-        <td className="py-4 px-6 text-center">
-            <div className="flex justify-center">
-                <Sparkline
-                    data={stock.priceHistory}
-                    width={100}
-                    height={36}
-                    color={stock.priceChange >= 0 ? '#10b981' : '#ef4444'}
-                />
-            </div>
-        </td>
-        <td className="py-4 px-6 text-center">
-            <div className="flex justify-center">
-                <ShariahBadge status={stock.shariahStatus} />
-            </div>
-        </td>
-        <td className="py-4 px-6 text-center">
-            <div className={`font-mono font-bold text-sm ${stock.technicals?.rsi < 30 ? 'text-emerald-400' :
-                stock.technicals?.rsi > 70 ? 'text-red-400' : 'text-gray-400'
+        </div>
+
+        {/* Trend Sparkline */}
+        <div className="w-28 px-3 flex justify-center">
+            <Sparkline
+                data={stock.priceHistory}
+                width={100}
+                height={36}
+                color={stock.priceChange >= 0 ? '#10b981' : '#ef4444'}
+            />
+        </div>
+
+        {/* Shariah Status */}
+        <div className="w-24 px-3 flex justify-center">
+            <ShariahBadge status={stock.shariahStatus} />
+        </div>
+
+        {/* RSI */}
+        <div className="w-16 px-3 text-center">
+            <span className={`font-mono font-bold text-sm ${stock.technicals?.rsi < 30 ? 'text-emerald-400' :
+                    stock.technicals?.rsi > 70 ? 'text-red-400' : 'text-gray-400'
                 }`}>
                 {stock.technicals?.rsi || '-'}
-            </div>
-        </td>
-        <td className="py-4 px-6 text-right">
-            <div className="flex justify-end">
-                <SignalBadge signal={stock.technicals?.signal} />
-            </div>
-        </td>
-    </tr>
-);
+            </span>
+        </div>
+
+        {/* Signal */}
+        <div className="w-24 px-3 flex justify-end">
+            <SignalBadge signal={stock.technicals?.signal} />
+        </div>
+    </div>
+));
 
 /**
  * Shariah Status Badge
  */
-const ShariahBadge = ({ status }) => (
-    <span className={`px-3 py-1.5 rounded-lg text-[11px] font-bold flex w-fit items-center gap-1.5 border transition-all ${status === 'Halal' ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
-        status === 'Non-Halal' ? 'bg-red-500/5 text-red-400 border-red-500/30' :
-            'bg-yellow-500/5 text-yellow-400 border-yellow-500/30'
+const ShariahBadge = memo(({ status }) => (
+    <span className={`px-2 py-1 rounded-lg text-[10px] font-bold flex w-fit items-center gap-1 border transition-all ${status === 'Halal' ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
+            status === 'Non-Halal' ? 'bg-red-500/5 text-red-400 border-red-500/30' :
+                'bg-yellow-500/5 text-yellow-400 border-yellow-500/30'
         }`}>
-        {status === 'Halal' ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+        {status === 'Halal' ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
         {status?.toUpperCase()}
     </span>
-);
+));
 
 /**
  * Trading Signal Badge
  */
-const SignalBadge = ({ signal }) => {
+const SignalBadge = memo(({ signal }) => {
     if (signal === 'Buy') {
         return (
-            <span className="text-emerald-400 font-bold text-xs flex items-center gap-1.5 bg-emerald-400/10 px-3 py-1 rounded border border-emerald-400/20">
-                <TrendingUp className="w-3.5 h-3.5" /> BUY
+            <span className="text-emerald-400 font-bold text-xs flex items-center gap-1 bg-emerald-400/10 px-2 py-1 rounded border border-emerald-400/20">
+                <TrendingUp className="w-3 h-3" /> BUY
             </span>
         );
     }
     if (signal === 'Sell') {
         return (
-            <span className="text-red-400 font-bold text-xs flex items-center gap-1.5 bg-red-400/10 px-3 py-1 rounded border border-red-400/20">
-                <TrendingDown className="w-3.5 h-3.5" /> SELL
+            <span className="text-red-400 font-bold text-xs flex items-center gap-1 bg-red-400/10 px-2 py-1 rounded border border-red-400/20">
+                <TrendingDown className="w-3 h-3" /> SELL
             </span>
         );
     }
     return <span className="text-gray-600 font-bold text-xs uppercase tracking-wider">Wait</span>;
-};
+});
 
 export default StockTable;

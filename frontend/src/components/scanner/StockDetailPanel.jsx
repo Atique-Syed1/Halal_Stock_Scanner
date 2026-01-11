@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
-import { AlertTriangle, Activity, Radio, BarChart2, Newspaper, Bot } from 'lucide-react';
+import React, { useState, lazy, Suspense } from 'react';
+import { AlertTriangle, Activity, Radio, BarChart2, Newspaper, Bot, Loader } from 'lucide-react';
 import { MAX_DEBT_RATIO, MAX_CASH_RATIO } from '../../data/stockData';
-import { AdvancedChart } from '../common/AdvancedChart';
 import { BacktestModal, BacktestButton } from '../backtest/Backtest';
 import { NewsPanel } from './NewsPanel';
 import { AIAnalystModal } from './AIAnalyst';
+
+// Lazy load the AdvancedChart to defer loading heavy chart libraries (recharts + lightweight-charts)
+const AdvancedChart = lazy(() => import('../common/AdvancedChart'));
+
+// Chart loading placeholder
+const ChartLoadingSkeleton = () => (
+    <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden" style={{ height: 280 }}>
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-gray-700/50">
+            <div className="h-6 w-32 bg-gray-700/50 rounded animate-pulse"></div>
+            <div className="flex gap-2">
+                <div className="h-8 w-24 bg-gray-700/50 rounded animate-pulse"></div>
+                <div className="h-8 w-16 bg-gray-700/50 rounded animate-pulse"></div>
+            </div>
+        </div>
+        <div className="flex items-center justify-center h-48">
+            <Loader className="w-8 h-8 text-emerald-500 animate-spin" />
+        </div>
+    </div>
+);
 
 /**
  * Stock Detail Panel - Shows Shariah compliance, chart, and technical analysis
@@ -51,15 +69,17 @@ export const StockDetailPanel = ({ stock, useLiveMode, wsConnected }) => {
                 stock={stock}
             />
 
-            {/* Advanced TradingView-style Chart */}
+            {/* Advanced TradingView-style Chart - Lazy loaded */}
             <div className="mb-6">
-                <AdvancedChart 
-                    symbol={stock.symbol} 
-                    height={280} 
-                    showVolume={true}
-                    showIndicators={true}
-                    defaultPeriod="1y"
-                />
+                <Suspense fallback={<ChartLoadingSkeleton />}>
+                    <AdvancedChart
+                        symbol={stock.symbol}
+                        height={280}
+                        showVolume={true}
+                        showIndicators={true}
+                        defaultPeriod="1y"
+                    />
+                </Suspense>
             </div>
 
             {/* Tabs */}

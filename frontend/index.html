@@ -1,62 +1,74 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
-    <!-- Performance Optimization -->
-    <link rel="preconnect" href="https://tradebotbackendserver-production.up.railway.app" crossorigin />
-    <link rel="dns-prefetch" href="https://tradebotbackendserver-production.up.railway.app" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#10b981" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="HalalTrade" />
-    
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Advanced Shariah-compliant stock scanner with real-time analysis, AI insights, portfolio tracking, backtesting, and halal screening. Track NSE stocks with Islamic finance compliance." />
-    <meta name="keywords" content="halal stocks, shariah investing, stock scanner, islamic finance, trading, NSE, India stocks, halal screening, portfolio tracker, backtesting, AI stock analysis" />
-    <meta name="author" content="HalalTrade" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://trading-bot-002.vercel.app/" />
-    
-    <!-- Favicon & Icons -->
-    <link rel="icon" type="image/svg+xml" href="/halaltrade-icon.svg" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://trading-bot-002.vercel.app/" />
-    <meta property="og:title" content="HalalTrade Pro - Shariah-Compliant Stock Scanner" />
-    <meta property="og:description" content="Advanced stock scanner with real-time analysis, AI insights, and halal screening. Track your portfolio with Islamic finance compliance." />
-    <meta property="og:image" content="https://trading-bot-002.vercel.app/icons/icon-512x512.png" />
-    <meta property="og:site_name" content="HalalTrade Pro" />
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://trading-bot-002.vercel.app/" />
-    <meta name="twitter:title" content="HalalTrade Pro - Shariah Stock Scanner" />
-    <meta name="twitter:description" content="Advanced stock scanner with AI insights and halal screening" />
-    <meta name="twitter:image" content="https://trading-bot-002.vercel.app/icons/icon-512x512.png" />
-    
-    <title>HalalTrade Pro - Shariah Stock Scanner</title>
-    
-    <!-- Register Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('[PWA] Service Worker registered'))
-            .catch(err => console.log('[PWA] SW registration failed:', err));
-        });
-      }
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Performance Optimization -->
+  <link rel="preconnect" href="https://tradebotbackendserver-production.up.railway.app" crossorigin />
+  <link rel="dns-prefetch" href="https://tradebotbackendserver-production.up.railway.app" />
+
+  <!-- 
+      Module preload hints for critical vendor chunks
+      These are generated during build - update paths after each build if needed
+      The browser will start downloading these in parallel with the main bundle
+    -->
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#10b981" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HalalTrade" />
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Advanced Shariah-compliant stock scanner with real-time analysis, AI insights, portfolio tracking, backtesting, and halal screening. Track NSE stocks with Islamic finance compliance." />
+  <meta name="keywords"
+    content="halal stocks, shariah investing, stock scanner, islamic finance, trading, NSE, India stocks, halal screening, portfolio tracker, backtesting, AI stock analysis" />
+  <meta name="author" content="HalalTrade" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://trading-bot-002.vercel.app/" />
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/svg+xml" href="/halaltrade-icon.svg" />
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://trading-bot-002.vercel.app/" />
+  <meta property="og:title" content="HalalTrade Pro - Shariah-Compliant Stock Scanner" />
+  <meta property="og:description"
+    content="Advanced stock scanner with real-time analysis, AI insights, and halal screening. Track your portfolio with Islamic finance compliance." />
+  <meta property="og:image" content="https://trading-bot-002.vercel.app/icons/icon-512x512.png" />
+  <meta property="og:site_name" content="HalalTrade Pro" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://trading-bot-002.vercel.app/" />
+  <meta name="twitter:title" content="HalalTrade Pro - Shariah Stock Scanner" />
+  <meta name="twitter:description" content="Advanced stock scanner with AI insights and halal screening" />
+  <meta name="twitter:image" content="https://trading-bot-002.vercel.app/icons/icon-512x512.png" />
+
+  <title>HalalTrade Pro - Shariah Stock Scanner</title>
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('[PWA] Service Worker registered'))
+          .catch(err => console.log('[PWA] SW registration failed:', err));
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

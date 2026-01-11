@@ -52,9 +52,9 @@ function isCacheableAPI(url) {
 async function getCachedAPIResponse(request) {
   const cache = await caches.open(API_CACHE_NAME);
   const cachedResponse = await cache.match(request);
-  
+
   if (!cachedResponse) return null;
-  
+
   // Check if cache is expired
   const cachedTime = cachedResponse.headers.get('sw-cached-time');
   if (cachedTime) {
@@ -65,24 +65,24 @@ async function getCachedAPIResponse(request) {
       return null;
     }
   }
-  
+
   return cachedResponse;
 }
 
 // Cache API response with timestamp
 async function cacheAPIResponse(request, response) {
   const cache = await caches.open(API_CACHE_NAME);
-  
+
   // Clone response and add timestamp header
   const headers = new Headers(response.headers);
   headers.set('sw-cached-time', Date.now().toString());
-  
+
   const cachedResponse = new Response(await response.clone().blob(), {
     status: response.status,
     statusText: response.statusText,
     headers: headers
   });
-  
+
   await cache.put(request, cachedResponse);
 }
 
@@ -115,9 +115,9 @@ self.addEventListener('fetch', (event) => {
             console.log('[SW] Serving from cache:', url);
             return cachedResponse;
           }
-          return new Response(JSON.stringify({ 
-            error: 'Offline', 
-            message: 'No cached data available' 
+          return new Response(JSON.stringify({
+            error: 'Offline',
+            message: 'No cached data available'
           }), {
             status: 503,
             headers: { 'Content-Type': 'application/json' }
@@ -136,7 +136,7 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         // Clone response before caching
         const responseClone = response.clone();
-        
+
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseClone);
         });
@@ -166,7 +166,7 @@ self.addEventListener('message', (event) => {
       console.log('[SW] API cache cleared');
     });
   }
-  
+
   if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
@@ -177,11 +177,11 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   const data = event.data.json();
-  
+
   const options = {
     body: data.body || 'New notification',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: '/icons/icon-192x192.svg',
+    badge: '/halaltrade-icon.svg',
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/'

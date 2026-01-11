@@ -21,6 +21,8 @@ import {
 // Import components from subfolders
 import { ConnectionStatus, ExportButton, PWAInstallPrompt, NotificationToggle, PageLoadingSkeleton, ModalSkeleton, LanguageSelector } from './components/common';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { useToast } from './components/common/Toast';
+import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { StockTable, WatchlistPanel, WatchlistIndicator } from './components/scanner';
 import { CommandPalette } from './components/common/CommandPalette';
 
@@ -55,6 +57,9 @@ import API from './config/api';
  * ====================================================================
  */
 const HalalTradeApp = () => {
+    // Toast notifications
+    const toast = useToast();
+
     // Core state
     const [useLiveMode, setUseLiveMode] = useState(false);
     const [stocks, setStocks] = useState([]);
@@ -231,12 +236,14 @@ const HalalTradeApp = () => {
             ws.onerror = (error) => {
                 console.error('[WS] Error:', error);
                 setErrorMsg('WebSocket connection failed. Is the backend running?');
+                toast.error('Connection Failed', 'Could not connect to live price stream');
                 setWsConnecting(false);
             };
 
         } catch (err) {
             console.error('[WS] Connection error:', err);
             setErrorMsg('Failed to connect to WebSocket');
+            toast.error('Connection Error', 'Failed to establish WebSocket connection');
             setWsConnecting(false);
         }
     }, [useLiveMode]);
@@ -315,27 +322,25 @@ const HalalTradeApp = () => {
                                 <ShieldCheck className="w-7 h-7 text-emerald-400" />
                                 HalalTrade Pro
                             </h1>
-                            
+
                             {/* Navigation Tabs */}
                             <div className="hidden md:flex items-center gap-1 bg-gray-800/50 rounded-lg p-1">
                                 <button
                                     onClick={() => setActiveTab('dashboard')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                                        activeTab === 'dashboard'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'dashboard'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                        }`}
                                 >
                                     <LayoutDashboard size={16} />
                                     Dashboard
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('scanner')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                                        activeTab === 'scanner'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'scanner'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                        }`}
                                 >
                                     <ScanLine size={16} />
                                     Scanner
@@ -383,21 +388,19 @@ const HalalTradeApp = () => {
                             <div className="flex md:hidden items-center gap-1 bg-gray-800/50 rounded-lg p-1">
                                 <button
                                     onClick={() => setActiveTab('dashboard')}
-                                    className={`p-2 rounded-md transition-all ${
-                                        activeTab === 'dashboard'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : 'text-gray-400'
-                                    }`}
+                                    className={`p-2 rounded-md transition-all ${activeTab === 'dashboard'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : 'text-gray-400'
+                                        }`}
                                 >
                                     <LayoutDashboard size={18} />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('scanner')}
-                                    className={`p-2 rounded-md transition-all ${
-                                        activeTab === 'scanner'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : 'text-gray-400'
-                                    }`}
+                                    className={`p-2 rounded-md transition-all ${activeTab === 'scanner'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : 'text-gray-400'
+                                        }`}
                                 >
                                     <ScanLine size={18} />
                                 </button>
@@ -500,60 +503,70 @@ const HalalTradeApp = () => {
             {/* TELEGRAM SETTINGS MODAL - Lazy loaded */}
             {telegramOpen && (
                 <Suspense fallback={<ModalSkeleton />}>
-                    <TelegramSettings
-                        isOpen={telegramOpen}
-                        onClose={() => setTelegramOpen(false)}
-                    />
+                    <ErrorBoundary minimal>
+                        <TelegramSettings
+                            isOpen={telegramOpen}
+                            onClose={() => setTelegramOpen(false)}
+                        />
+                    </ErrorBoundary>
                 </Suspense>
             )}
 
             {/* STOCK LIST SETTINGS MODAL - Lazy loaded */}
             {stockListOpen && (
                 <Suspense fallback={<ModalSkeleton />}>
-                    <StockListSettings
-                        isOpen={stockListOpen}
-                        onClose={() => setStockListOpen(false)}
-                        onListChange={async () => {
-                            try {
-                                const res = await fetch(API.STOCKS_LIST);
-                                const data = await res.json();
-                                setUniverseInfo(data);
-                            } catch (err) {
-                                console.error("Failed to refresh stock list info", err);
-                            }
-                        }}
-                    />
+                    <ErrorBoundary minimal>
+                        <StockListSettings
+                            isOpen={stockListOpen}
+                            onClose={() => setStockListOpen(false)}
+                            onListChange={async () => {
+                                try {
+                                    const res = await fetch(API.STOCKS_LIST);
+                                    const data = await res.json();
+                                    setUniverseInfo(data);
+                                } catch (err) {
+                                    console.error("Failed to refresh stock list info", err);
+                                }
+                            }}
+                        />
+                    </ErrorBoundary>
                 </Suspense>
             )}
 
             {/* PORTFOLIO MODAL - Lazy loaded */}
             {portfolioOpen && (
                 <Suspense fallback={<ModalSkeleton />}>
-                    <Portfolio
-                        isOpen={portfolioOpen}
-                        onClose={() => setPortfolioOpen(false)}
-                    />
+                    <ErrorBoundary minimal>
+                        <Portfolio
+                            isOpen={portfolioOpen}
+                            onClose={() => setPortfolioOpen(false)}
+                        />
+                    </ErrorBoundary>
                 </Suspense>
             )}
 
             {/* ALERTS MODAL - Lazy loaded */}
             {alertOpen && (
                 <Suspense fallback={<ModalSkeleton />}>
-                    <AlertSettings
-                        isOpen={alertOpen}
-                        onClose={() => setAlertOpen(false)}
-                    />
+                    <ErrorBoundary minimal>
+                        <AlertSettings
+                            isOpen={alertOpen}
+                            onClose={() => setAlertOpen(false)}
+                        />
+                    </ErrorBoundary>
                 </Suspense>
             )}
 
             {/* COMPARE MODAL - Lazy loaded */}
             {compareOpen && (
                 <Suspense fallback={<ModalSkeleton />}>
-                    <CompareStocks
-                        isOpen={compareOpen}
-                        onClose={() => setCompareOpen(false)}
-                        stocks={stocks}
-                    />
+                    <ErrorBoundary minimal>
+                        <CompareStocks
+                            isOpen={compareOpen}
+                            onClose={() => setCompareOpen(false)}
+                            stocks={stocks}
+                        />
+                    </ErrorBoundary>
                 </Suspense>
             )}
 
@@ -577,6 +590,15 @@ const HalalTradeApp = () => {
 
             {/* PWA Install Prompt */}
             <PWAInstallPrompt />
+
+            {/* Mobile Bottom Navigation */}
+            <MobileBottomNav
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                onOpenPortfolio={() => setPortfolioOpen(true)}
+                onOpenAlerts={() => setAlertOpen(true)}
+                onOpenSearch={() => setCommandPaletteOpen(true)}
+            />
         </div>
     );
 };

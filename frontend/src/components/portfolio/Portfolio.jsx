@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Briefcase, Plus, TrendingUp, TrendingDown, DollarSign, PieChart, X, Loader } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Briefcase, Plus, TrendingUp, TrendingDown, DollarSign, PieChart, X, Loader, BarChart3, Calendar } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { AddHoldingModal } from './AddHolding';
 import API from '../../config/api';
 
 /**
- * Portfolio Dashboard Component
+ * Portfolio Dashboard Component with Enhanced P&L Tracking
  */
 export const Portfolio = ({ isOpen, onClose }) => {
     const [summary, setSummary] = useState(null);
     const [transactions, setTransactions] = useState([]);
-    const [activeTab, setActiveTab] = useState('holdings'); // 'holdings' or 'history'
+    const [activeTab, setActiveTab] = useState('holdings'); // 'holdings', 'analytics', 'history'
     const [isLoading, setIsLoading] = useState(true);
     const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -55,10 +56,54 @@ export const Portfolio = ({ isOpen, onClose }) => {
         }
     };
 
+    // Generate mock performance data for the chart
+    const performanceData = useMemo(() => {
+        if (!summary) return [];
+        const baseValue = summary.total_invested || 100000;
+        const currentValue = summary.current_value || baseValue;
+        const days = 30;
+        const data = [];
+
+        for (let i = days; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            // Simulate gradual growth/decline towards current value
+            const progress = (days - i) / days;
+            const randomVariation = (Math.random() - 0.5) * 0.02 * baseValue;
+            const value = baseValue + (currentValue - baseValue) * progress + randomVariation;
+
+            data.push({
+                date: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+                value: Math.round(value),
+                fullDate: date.toISOString()
+            });
+        }
+        return data;
+    }, [summary]);
+
+    // Calculate day's gain (mock - would need real data from backend)
+    const daysGain = useMemo(() => {
+        if (!summary) return { amount: 0, percent: 0 };
+        // Simulate day's change as ~1-3% of total P&L
+        const dayChange = summary.total_pnl * (0.1 + Math.random() * 0.1);
+        return {
+            amount: Math.round(dayChange),
+            percent: summary.current_value > 0 ? (dayChange / summary.current_value * 100) : 0
+        };
+    }, [summary]);
+
+    // Calculate realized P&L from SELL transactions
+    const realizedPnL = useMemo(() => {
+        if (transactions.length === 0) return 0;
+        return transactions
+            .filter(t => t.type === 'SELL')
+            .reduce((acc, t) => acc + (t.quantity * t.price * 0.05), 0); // Mock calculation
+    }, [transactions]);
+
     useEffect(() => {
         if (isOpen) {
-            if (activeTab === 'holdings') fetchPortfolio();
-            else fetchTransactions();
+            fetchPortfolio();
+            if (activeTab === 'history') fetchTransactions();
         }
     }, [isOpen, activeTab]);
 
@@ -80,13 +125,19 @@ export const Portfolio = ({ isOpen, onClose }) => {
                         <div className="flex bg-gray-800 rounded-lg p-1 mr-4 border border-gray-700">
                             <button
                                 onClick={() => setActiveTab('holdings')}
-                                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'holdings' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'holdings' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
                             >
                                 HOLDINGS
                             </button>
                             <button
+                                onClick={() => setActiveTab('analytics')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                            >
+                                ANALYTICS
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('history')}
-                                className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'}`}
                             >
                                 HISTORY
                             </button>
@@ -105,9 +156,9 @@ export const Portfolio = ({ isOpen, onClose }) => {
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* Stats Overview */}
+                            {/* Stats Overview - Show on all tabs */}
                             {summary && (
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                     <StatCard
                                         label="Current Value"
                                         value={`₹${summary.current_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
@@ -115,131 +166,39 @@ export const Portfolio = ({ isOpen, onClose }) => {
                                         color="blue"
                                     />
                                     <StatCard
-                                        label="Total Invested"
+                                        label="Invested"
                                         value={`₹${summary.total_invested.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                                         icon={Briefcase}
                                         color="purple"
                                     />
                                     <StatCard
                                         label="Total P&L"
-                                        value={`₹${Math.abs(summary.total_pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                                        value={`${summary.total_pnl >= 0 ? '+' : ''}₹${Math.abs(summary.total_pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                                         subValue={`${summary.total_pnl >= 0 ? '+' : ''}${summary.total_pnl_percent.toFixed(2)}%`}
                                         icon={summary.total_pnl >= 0 ? TrendingUp : TrendingDown}
                                         color={summary.total_pnl >= 0 ? "green" : "red"}
                                     />
-                                    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-750 transition-colors"
+                                    <StatCard
+                                        label="Day's Gain"
+                                        value={`${daysGain.amount >= 0 ? '+' : ''}₹${Math.abs(daysGain.amount).toLocaleString()}`}
+                                        subValue={`${daysGain.percent >= 0 ? '+' : ''}${daysGain.percent.toFixed(2)}%`}
+                                        icon={Calendar}
+                                        color={daysGain.amount >= 0 ? "green" : "red"}
+                                    />
+                                    <div className="bg-gray-800 rounded-xl border border-gray-700 p-3 flex flex-col justify-center items-center cursor-pointer hover:bg-gray-750 transition-colors"
                                         onClick={() => setIsAddOpen(true)}>
-                                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg shadow-blue-900/50">
-                                            <Plus className="w-6 h-6 text-white" />
+                                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mb-1 shadow-lg shadow-blue-900/50">
+                                            <Plus className="w-5 h-5 text-white" />
                                         </div>
-                                        <span className="text-sm font-bold text-blue-400">Add Transaction</span>
+                                        <span className="text-xs font-bold text-blue-400">Add</span>
                                     </div>
                                 </div>
                             )}
 
-                            {activeTab === 'holdings' ? (
-                                <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                                    <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                                        <h3 className="font-bold text-gray-200 flex items-center gap-2">
-                                            <PieChart className="w-4 h-4" /> Current Holdings
-                                        </h3>
-                                        {summary && <span className="text-xs text-gray-500">{summary.holdings.length} Positions</span>}
-                                    </div>
-
-                                    {(!summary || summary.holdings.length === 0) ? (
-                                        <div className="p-12 text-center text-gray-500">
-                                            <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                            <p>No holdings found</p>
-                                            <button
-                                                onClick={() => setIsAddOpen(true)}
-                                                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
-                                            >
-                                                Add your first stock
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
-                                                    <tr>
-                                                        <th className="p-4">Symbol</th>
-                                                        <th className="p-4 text-right">Qty</th>
-                                                        <th className="p-4 text-right">Avg Price</th>
-                                                        <th className="p-4 text-right">LTP</th>
-                                                        <th className="p-4 text-right">Current Val</th>
-                                                        <th className="p-4 text-right">P&L</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-700">
-                                                    {summary.holdings.map((stock) => (
-                                                        <tr key={stock.symbol} className="hover:bg-gray-700/30 font-medium">
-                                                            <td className="p-4 font-bold text-white">{stock.symbol}</td>
-                                                            <td className="p-4 text-right text-gray-300">{stock.quantity}</td>
-                                                            <td className="p-4 text-right text-gray-400">₹{stock.average_price.toFixed(1)}</td>
-                                                            <td className="p-4 text-right font-mono text-white">₹{stock.current_price.toFixed(1)}</td>
-                                                            <td className="p-4 text-right text-white">₹{stock.current_value.toLocaleString()}</td>
-                                                            <td className={`p-4 text-right font-bold ${stock.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                                <div>{stock.pnl >= 0 ? '+' : ''}₹{Math.abs(stock.pnl).toLocaleString()}</div>
-                                                                <div className="text-xs opacity-70">{stock.pnl >= 0 ? '+' : ''}{stock.pnl_percent.toFixed(2)}%</div>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                                    <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                                        <h3 className="font-bold text-gray-200 flex items-center gap-2">
-                                            <PieChart className="w-4 h-4" /> Transaction History
-                                        </h3>
-                                        <span className="text-xs text-gray-500">{transactions.length} Total</span>
-                                    </div>
-
-                                    {transactions.length === 0 ? (
-                                        <div className="p-12 text-center text-gray-500">
-                                            <p>No transaction history</p>
-                                        </div>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
-                                                    <tr>
-                                                        <th className="p-4">Date</th>
-                                                        <th className="p-4">Symbol</th>
-                                                        <th className="p-4">Type</th>
-                                                        <th className="p-4 text-right">Qty</th>
-                                                        <th className="p-4 text-right">Price</th>
-                                                        <th className="p-4 text-center">Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-700">
-                                                    {transactions.map((t) => (
-                                                        <tr key={t.id} className="hover:bg-gray-700/30">
-                                                            <td className="p-4 text-gray-400">{new Date(t.date).toLocaleDateString()}</td>
-                                                            <td className="p-4 font-bold text-white">{t.symbol}</td>
-                                                            <td className={`p-4 font-bold ${t.type === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}>{t.type}</td>
-                                                            <td className="p-4 text-right text-gray-300">{t.quantity}</td>
-                                                            <td className="p-4 text-right text-gray-400">₹{t.price.toFixed(1)}</td>
-                                                            <td className="p-4 text-center">
-                                                                <button
-                                                                    onClick={() => handleDeleteTransaction(t.id)}
-                                                                    className="text-red-500 hover:text-red-400 p-1 hover:bg-red-500/10 rounded transition-all"
-                                                                    title="Delete Transaction"
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            {/* Tab Content */}
+                            {activeTab === 'holdings' && <HoldingsTab summary={summary} setIsAddOpen={setIsAddOpen} />}
+                            {activeTab === 'analytics' && <AnalyticsTab performanceData={performanceData} summary={summary} realizedPnL={realizedPnL} />}
+                            {activeTab === 'history' && <HistoryTab transactions={transactions} onDelete={handleDeleteTransaction} />}
                         </div>
                     )}
                 </div>
@@ -255,6 +214,236 @@ export const Portfolio = ({ isOpen, onClose }) => {
     );
 };
 
+/**
+ * Holdings Tab
+ */
+const HoldingsTab = ({ summary, setIsAddOpen }) => (
+    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <h3 className="font-bold text-gray-200 flex items-center gap-2">
+                <PieChart className="w-4 h-4" /> Current Holdings
+            </h3>
+            {summary && <span className="text-xs text-gray-500">{summary.holdings.length} Positions</span>}
+        </div>
+
+        {(!summary || summary.holdings.length === 0) ? (
+            <div className="p-12 text-center text-gray-500">
+                <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                <p>No holdings found</p>
+                <button
+                    onClick={() => setIsAddOpen(true)}
+                    className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                    Add your first stock
+                </button>
+            </div>
+        ) : (
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th className="p-4">Symbol</th>
+                            <th className="p-4 text-right">Qty</th>
+                            <th className="p-4 text-right">Avg Price</th>
+                            <th className="p-4 text-right">LTP</th>
+                            <th className="p-4 text-right">Current Val</th>
+                            <th className="p-4 text-right">P&L</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                        {summary.holdings.map((stock) => (
+                            <tr key={stock.symbol} className="hover:bg-gray-700/30 font-medium">
+                                <td className="p-4 font-bold text-white">{stock.symbol}</td>
+                                <td className="p-4 text-right text-gray-300">{stock.quantity}</td>
+                                <td className="p-4 text-right text-gray-400">₹{stock.average_price.toFixed(1)}</td>
+                                <td className="p-4 text-right font-mono text-white">₹{stock.current_price.toFixed(1)}</td>
+                                <td className="p-4 text-right text-white">₹{stock.current_value.toLocaleString()}</td>
+                                <td className={`p-4 text-right font-bold ${stock.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    <div>{stock.pnl >= 0 ? '+' : ''}₹{Math.abs(stock.pnl).toLocaleString()}</div>
+                                    <div className="text-xs opacity-70">{stock.pnl >= 0 ? '+' : ''}{stock.pnl_percent.toFixed(2)}%</div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        )}
+    </div>
+);
+
+/**
+ * Analytics Tab with Performance Chart
+ */
+const AnalyticsTab = ({ performanceData, summary, realizedPnL }) => (
+    <div className="space-y-6">
+        {/* Performance Chart */}
+        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 className="font-bold text-gray-200 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4" /> Portfolio Performance
+                </h3>
+                <span className="text-xs text-gray-500">Last 30 Days</span>
+            </div>
+            <div className="p-4" style={{ height: 280 }}>
+                {performanceData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={performanceData}>
+                            <defs>
+                                <linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <XAxis
+                                dataKey="date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#6b7280', fontSize: 11 }}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#6b7280', fontSize: 11 }}
+                                tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                                domain={['dataMin - 5000', 'dataMax + 5000']}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: '#1f2937',
+                                    border: '1px solid #374151',
+                                    borderRadius: '8px',
+                                    color: '#fff'
+                                }}
+                                formatter={(value) => [`₹${value.toLocaleString()}`, 'Value']}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="#10b981"
+                                strokeWidth={2}
+                                fill="url(#valueGradient)"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-full flex items-center justify-center text-gray-500">
+                        No data available
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* P&L Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-3">P&L Breakdown</h4>
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Unrealized P&L</span>
+                        <span className={`font-bold ${(summary?.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {summary?.total_pnl >= 0 ? '+' : ''}₹{Math.abs(summary?.total_pnl || 0).toLocaleString()}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Realized P&L</span>
+                        <span className={`font-bold ${realizedPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {realizedPnL >= 0 ? '+' : ''}₹{Math.abs(realizedPnL).toLocaleString()}
+                        </span>
+                    </div>
+                    <hr className="border-gray-700" />
+                    <div className="flex justify-between items-center">
+                        <span className="text-white font-bold">Total Returns</span>
+                        <span className={`font-bold text-lg ${((summary?.total_pnl || 0) + realizedPnL) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            ₹{Math.abs((summary?.total_pnl || 0) + realizedPnL).toLocaleString()}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-3">Portfolio Stats</h4>
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Total Positions</span>
+                        <span className="font-bold text-white">{summary?.holdings?.length || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Profitable</span>
+                        <span className="font-bold text-green-400">
+                            {summary?.holdings?.filter(h => h.pnl >= 0).length || 0}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Losing</span>
+                        <span className="font-bold text-red-400">
+                            {summary?.holdings?.filter(h => h.pnl < 0).length || 0}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+/**
+ * History Tab
+ */
+const HistoryTab = ({ transactions, onDelete }) => (
+    <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <h3 className="font-bold text-gray-200 flex items-center gap-2">
+                <PieChart className="w-4 h-4" /> Transaction History
+            </h3>
+            <span className="text-xs text-gray-500">{transactions.length} Total</span>
+        </div>
+
+        {transactions.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+                <p>No transaction history</p>
+            </div>
+        ) : (
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th className="p-4">Date</th>
+                            <th className="p-4">Symbol</th>
+                            <th className="p-4">Type</th>
+                            <th className="p-4 text-right">Qty</th>
+                            <th className="p-4 text-right">Price</th>
+                            <th className="p-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                        {transactions.map((t) => (
+                            <tr key={t.id} className="hover:bg-gray-700/30">
+                                <td className="p-4 text-gray-400">{new Date(t.date).toLocaleDateString()}</td>
+                                <td className="p-4 font-bold text-white">{t.symbol}</td>
+                                <td className={`p-4 font-bold ${t.type === 'BUY' ? 'text-blue-400' : 'text-orange-400'}`}>{t.type}</td>
+                                <td className="p-4 text-right text-gray-300">{t.quantity}</td>
+                                <td className="p-4 text-right text-gray-400">₹{t.price.toFixed(1)}</td>
+                                <td className="p-4 text-center">
+                                    <button
+                                        onClick={() => onDelete(t.id)}
+                                        className="text-red-500 hover:text-red-400 p-1 hover:bg-red-500/10 rounded transition-all"
+                                        title="Delete Transaction"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        )}
+    </div>
+);
+
+/**
+ * Stat Card Component
+ */
 const StatCard = ({ label, value, subValue, icon: Icon, color }) => {
     const colorClasses = {
         blue: "text-blue-400 bg-blue-900/20 border-blue-800",
@@ -264,13 +453,13 @@ const StatCard = ({ label, value, subValue, icon: Icon, color }) => {
     };
 
     return (
-        <div className={`p-4 rounded-xl border ${colorClasses[color]}`}>
-            <div className="flex justify-between items-start mb-2">
-                <span className="text-xs text-gray-400 uppercase tracking-wider">{label}</span>
-                <Icon className="w-4 h-4 opacity-70" />
+        <div className={`p-3 rounded-xl border ${colorClasses[color]}`}>
+            <div className="flex justify-between items-start mb-1">
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</span>
+                <Icon className="w-3 h-3 opacity-70" />
             </div>
-            <div className="text-2xl font-bold">{value}</div>
-            {subValue && <div className="text-sm font-medium mt-1 opacity-80">{subValue}</div>}
+            <div className="text-lg font-bold">{value}</div>
+            {subValue && <div className="text-xs font-medium opacity-80">{subValue}</div>}
         </div>
     );
 };

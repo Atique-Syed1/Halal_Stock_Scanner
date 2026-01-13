@@ -1,62 +1,113 @@
-# HalalTrade Pro 🕌
+# 📈 HalalTrade Pro
 
-A Shariah-compliant stock scanner with real-time price streaming, technical analysis, and backtesting.
+**India's First AI-Powered Shariah-Compliant Stock Scanner**
 
-![HalalTrade Pro](https://img.shields.io/badge/Made%20with-React%20%2B%20FastAPI-blue?style=flat-square)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-10b981?style=for-the-badge)](https://trading-bot-002.vercel.app/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 📊 **Real-time Scanning** | Live price updates via WebSocket |
-| 🕌 **Shariah Compliance** | Automatic Halal/Non-Halal classification |
-| 📈 **Technical Analysis** | RSI, MACD, Bollinger Bands signals |
-| 📝 **Backtesting** | Test 4 different trading strategies |
-| ⭐ **Watchlist** | Save favorite stocks locally |
-| 📱 **Telegram Alerts** | Get notified on buy signals |
-| 📋 **CSV Import** | Load custom stock lists |
-| 📄 **Export** | Download reports as CSV/PDF |
+![HalalTrade Pro Dashboard](./frontend/public/icons/icon-192x192.png)
 
 ---
 
-## 🚀 Quick Start
+## 🌟 Features
+
+### Core Features
+- 🛡️ **Shariah Screening** - Automatic halal/non-halal classification for 500+ NSE stocks
+- 📊 **Real-time Scanner** - Live price updates via WebSocket with buy/sell signals
+- 🤖 **AI Analysis** - Get AI-powered insights and recommendations for any stock
+- 💼 **Portfolio Tracking** - Track holdings, P&L, day's gain with analytics charts
+- 🔔 **Smart Alerts** - Price alerts with Telegram notifications
+- 📈 **Backtesting** - Test trading strategies on historical data
+
+### Technical Highlights
+- ⚡ Real-time WebSocket price updates
+- 📱 PWA - Install as mobile/desktop app
+- 🌙 Dark/Light mode
+- 📊 Interactive charts with Recharts
+- 🧪 Comprehensive test coverage
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| React 18 | UI Framework |
+| Vite | Build tool & dev server |
+| TypeScript | Type safety |
+| CSS3 | Custom styling |
+| Recharts | Charts & analytics |
+| Lucide React | Icons |
+
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| Python | Backend language |
+| FastAPI | REST API framework |
+| WebSocket | Real-time updates |
+| SQLAlchemy | Database ORM |
+
+### Testing
+| Technology | Purpose |
+|------------|---------|
+| Vitest | Unit testing |
+| React Testing Library | Component tests |
+| Playwright | E2E browser testing |
+
+### Deployment
+| Service | Purpose |
+|---------|---------|
+| Vercel | Frontend hosting |
+| GitHub | Version control |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.10+
 - Node.js 18+
+- Python 3.9+
+- npm or yarn
 
-### 1. Clone & Install
+### Frontend Setup
 
 ```bash
-# Clone the repo
-git clone <your-repo-url>
-cd tradebot
-
-# Install backend dependencies
-cd backend
-pip install -r requirements.txt
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-```
-
-### 2. Run the App
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-python -m app.main
-```
-
-**Terminal 2 - Frontend:**
-```bash
+# Navigate to frontend
 cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-### 3. Open Browser
-Navigate to: **http://localhost:5173**
+The app will be available at `http://localhost:5173`
+
+### Backend Setup
+
+```bash
+# Navigate to backend
+cd backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the server
+python -m app.main
+```
+
+The API will be available at `http://localhost:8000`
 
 ---
 
@@ -64,109 +115,112 @@ Navigate to: **http://localhost:5173**
 
 ```
 tradebot/
-├── backend/                 # Python FastAPI backend
-│   ├── app/
-│   │   ├── main.py         # Server entry point
-│   │   ├── config.py       # Settings & constants
-│   │   ├── routers/        # API endpoints
-│   │   ├── services/       # Business logic
-│   │   └── utils/          # Indicators & helpers
-│   └── requirements.txt
-│
-├── frontend/               # React Vite frontend
+├── frontend/               # React frontend application
 │   ├── src/
-│   │   ├── components/     # UI components
+│   │   ├── components/     # React components
 │   │   │   ├── common/     # Shared components
-│   │   │   ├── scanner/    # Scanner components
-│   │   │   ├── backtest/   # Backtest modal
-│   │   │   └── settings/   # Settings modals
-│   │   ├── config/         # API configuration
+│   │   │   ├── dashboard/  # Dashboard components
+│   │   │   ├── portfolio/  # Portfolio components
+│   │   │   ├── scanner/    # Stock scanner
+│   │   │   └── settings/   # Settings components
 │   │   ├── hooks/          # Custom React hooks
-│   │   └── utils/          # Export utilities
-│   └── package.json
+│   │   ├── types/          # TypeScript definitions
+│   │   └── test/           # Test files
+│   ├── public/             # Static assets
+│   └── e2e/                # Playwright E2E tests
 │
-├── data/
-│   └── nse_stocks.csv      # Default stock list
+├── backend/                # Python FastAPI backend
+│   └── app/
+│       ├── routers/        # API route handlers
+│       ├── models/         # Database models
+│       └── services/       # Business logic
 │
-└── README.md
+└── website/                # Landing page (separate deployment)
+    ├── index.html
+    ├── styles.css
+    └── script.js
 ```
-
----
-
-## 📡 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/scan` | GET | Scan all stocks |
-| `/api/stocks/list` | GET | Get current stock list |
-| `/api/stocks/upload` | POST | Upload CSV file |
-| `/api/backtest` | POST | Run backtest |
-| `/api/strategies` | GET | List strategies |
-| `/api/telegram/config` | POST | Configure Telegram |
-| `/ws/prices` | WS | Live price stream |
-
----
-
-## 🧪 Trading Strategies
-
-| Strategy | Description |
-|----------|-------------|
-| **RSI + SMA50** | Buy when RSI < 30 and price > SMA50 |
-| **MACD Crossover** | Buy on bullish histogram crossover |
-| **Bollinger Bands** | Buy at lower band, sell at upper |
-| **MA Crossover** | Golden cross (fast > slow) = buy |
-
----
-
-## 📱 Telegram Setup
-
-1. Message [@BotFather](https://t.me/BotFather) on Telegram
-2. Send `/newbot` and follow prompts
-3. Copy the Bot Token
-4. Message [@userinfobot](https://t.me/userinfobot) to get your Chat ID
-5. Enter both in the app's Telegram Settings
 
 ---
 
 ## 🔧 Environment Variables
 
-Create a `.env.local` file in `/frontend`:
-
+### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
+VITE_API_URL=http://localhost:8000/api
+VITE_WS_URL=ws://localhost:8000/ws
+```
+
+### Backend (.env)
+```env
+DATABASE_URL=sqlite:///./app.db
+SECRET_KEY=your-secret-key
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 ```
 
 ---
 
-## 🌐 Deployment
+## 🧪 Testing
 
-Deploy your app for free:
+### Run Unit Tests
+```bash
+cd frontend
+npm run test
+```
 
-| Component | Platform | Guide |
-|-----------|----------|-------|
-| Frontend | **Vercel** | Free static hosting |
-| Backend | **Railway** | Free tier with $5 credit |
+### Run E2E Tests
+```bash
+cd frontend
+npm run test:e2e
+```
 
-📖 **Full deployment instructions:** [DEPLOYMENT.md](DEPLOYMENT.md)
+---
 
-### Quick Deploy Steps
+## 📱 PWA Features
 
-1. **Deploy Backend to Railway**
-   - Push to GitHub → Railway auto-deploys
-   - Set `CORS_ORIGINS` env var with your Vercel URL
+HalalTrade Pro is a Progressive Web App that can be installed on:
+- 📱 Mobile devices (iOS & Android)
+- 💻 Desktop (Windows, Mac, Linux)
 
-2. **Deploy Frontend to Vercel**
-   - Import from GitHub
-   - Set `VITE_API_URL` and `VITE_WS_URL` to Railway URL
-   - Deploy!
+Features:
+- Offline support with Service Worker
+- Push notifications (coming soon)
+- Add to home screen
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-MIT License - Feel free to use and modify!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-Made with ❤️ for the Muslim trading community
+## 🙏 Acknowledgments
+
+- Islamic finance principles from AAOIFI standards
+- Stock data from NSE India
+- UI inspiration from modern fintech apps
+
+---
+
+## 📞 Contact
+
+- **Website**: [halaltrade.pro](https://halaltrade.pro)
+- **Email**: contact@halaltrade.pro
+- **Twitter**: [@HalalTradePro](https://twitter.com/HalalTradePro)
+
+---
+
+<p align="center">
+  Made with ❤️ for the Muslim investor community
+</p>

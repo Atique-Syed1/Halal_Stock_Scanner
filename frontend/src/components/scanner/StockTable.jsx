@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
-import { ShieldCheck, ShieldAlert, TrendingUp, TrendingDown, Radio, Wifi } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, TrendingUp, TrendingDown, Radio, Wifi, ChevronUp, ChevronDown } from 'lucide-react';
 import { Sparkline } from '../common/Sparkline';
 import { WatchlistButton } from './Watchlist';
 
@@ -22,15 +22,60 @@ export const StockTable = ({
     const containerRef = useRef(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [containerHeight, setContainerHeight] = useState(600);
+    const [sortConfig, setSortConfig] = useState({ key: 'signal', direction: 'asc' });
 
-    // Sort: Buy signals first
-    const sortedStocks = useMemo(() => [...stocks].sort((a, b) => {
-        const signalA = a?.technicals?.signal;
-        const signalB = b?.technicals?.signal;
-        if (signalA === 'Buy' && signalB !== 'Buy') return -1;
-        if (signalB === 'Buy' && signalA !== 'Buy') return 1;
-        return 0;
-    }), [stocks]);
+    // Handle sort
+    const handleSort = (key) => {
+        setSortConfig((prev) => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    // Sort stocks
+    const sortedStocks = useMemo(() => {
+        const sorted = [...stocks];
+        if (sortConfig.key) {
+            sorted.sort((a, b) => {
+                let aValue, bValue;
+
+                switch (sortConfig.key) {
+                    case 'symbol':
+                        aValue = a.symbol;
+                        bValue = b.symbol;
+                        break;
+                    case 'price':
+                        aValue = a.price;
+                        bValue = b.price;
+                        break;
+                    case 'change':
+                        aValue = a.priceChangePercent;
+                        bValue = b.priceChangePercent;
+                        break;
+                    case 'rsi':
+                        aValue = parseFloat(a.technicals?.rsi || 0);
+                        bValue = parseFloat(b.technicals?.rsi || 0);
+                        break;
+                    case 'shariah':
+                        aValue = a.shariahStatus === 'Halal' ? 1 : 0;
+                        bValue = b.shariahStatus === 'Halal' ? 1 : 0;
+                        break;
+                    case 'signal':
+                        const signalScore = { 'Buy': 3, 'Wait': 2, 'Sell': 1 };
+                        aValue = signalScore[a.technicals?.signal] || 0;
+                        bValue = signalScore[b.technicals?.signal] || 0;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return sorted;
+    }, [stocks, sortConfig]);
 
     // Handle scroll
     const handleScroll = useCallback((e) => {
@@ -56,7 +101,7 @@ export const StockTable = ({
     const visibleStocks = sortedStocks.slice(startIndex, endIndex);
 
     return (
-        <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden">
+        <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden flex flex-col h-full">
             {/* Header */}
             <div className="p-4 border-b border-gray-700/50 flex justify-between items-center bg-gradient-to-r from-gray-800/80 to-gray-900/80">
                 <h2 className="font-bold text-lg flex items-center gap-2 text-white">
@@ -78,7 +123,7 @@ export const StockTable = ({
             </div>
 
             {/* Table Content */}
-            <div className="overflow-hidden">
+            <div className="flex-1 overflow-hidden flex flex-col">
                 {stocks.length === 0 ? (
                     <div className="p-16 text-center text-gray-500 animate-fade-in">
                         <div className="w-16 h-16 rounded-full bg-gray-800/50 flex items-center justify-center mx-auto mb-4 border border-gray-700/50">
@@ -93,26 +138,26 @@ export const StockTable = ({
                     </div>
                 ) : (
                     <>
-                        {/* Column Headers */}
-                        <div className="flex items-center py-3 px-2 text-gray-500 uppercase text-[11px] tracking-wider font-semibold bg-gray-900/90 border-b border-gray-800/50 sticky top-0 z-10">
+                        {/* Column Headers - Responsive */}
+                        <div className="flex items-center py-3 px-2 text-gray-500 uppercase text-[11px] tracking-wider font-semibold bg-gray-900/90 border-b border-gray-800/50 sticky top-0 z-10 min-w-[600px] lg:min-w-0">
                             <div className="w-12 flex-shrink-0"></div>
-                            <div className="flex-1 min-w-[120px] px-3">Stock</div>
-                            <div className="w-28 px-3">Price <span className="text-emerald-500 ml-1">●</span></div>
-                            <div className="w-28 px-3 text-center">Trend</div>
-                            <div className="w-24 px-3 text-center">Shariah</div>
-                            <div className="w-16 px-3 text-center">RSI</div>
-                            <div className="w-24 px-3 text-right">Signal</div>
+                            <SortableHeader label="Stock" sortKey="symbol" currentSort={sortConfig} onSort={handleSort} className="flex-1 min-w-[100px] px-2 md:px-3 cursor-pointer hover:text-white transition-colors" />
+                            <SortableHeader label="Price" sortKey="price" currentSort={sortConfig} onSort={handleSort} className="w-24 md:w-28 px-2 md:px-3 cursor-pointer hover:text-white transition-colors" />
+                            <div className="w-24 md:w-28 px-2 md:px-3 text-center hidden sm:block">Trend</div>
+                            <SortableHeader label="Shariah" sortKey="shariah" currentSort={sortConfig} onSort={handleSort} className="w-20 md:w-24 px-2 md:px-3 text-center cursor-pointer hover:text-white transition-colors" />
+                            <SortableHeader label="RSI" sortKey="rsi" currentSort={sortConfig} onSort={handleSort} className="w-14 md:w-16 px-2 md:px-3 text-center cursor-pointer hover:text-white transition-colors hidden sm:block" />
+                            <SortableHeader label="Signal" sortKey="signal" currentSort={sortConfig} onSort={handleSort} className="w-20 md:w-24 px-2 md:px-3 text-right cursor-pointer hover:text-white transition-colors" />
                         </div>
 
                         {/* Virtualized Scroll Container */}
                         <div
                             ref={containerRef}
                             onScroll={handleScroll}
-                            className="overflow-y-auto custom-scrollbar"
-                            style={{ height: Math.min(600, totalHeight) }}
+                            className="overflow-x-auto overflow-y-auto custom-scrollbar flex-1"
+                            style={{ minHeight: 0 }}
                         >
-                            {/* Spacer for total scrollable height */}
-                            <div style={{ height: totalHeight, position: 'relative' }}>
+                            {/* Spacer for total scrollable height - Ensure min-width for horizontal scroll on mobile */}
+                            <div style={{ height: totalHeight, position: 'relative', minWidth: '600px' }} className="lg:min-w-0">
                                 {/* Only render visible rows */}
                                 {visibleStocks.map((stock, i) => {
                                     const actualIndex = startIndex + i;
@@ -143,6 +188,16 @@ export const StockTable = ({
     );
 };
 
+const SortableHeader = ({ label, sortKey, currentSort, onSort, className }) => (
+    <div className={`${className} flex items-center gap-1 select-none`} onClick={() => onSort(sortKey)}>
+        {label}
+        <div className="flex flex-col">
+            <ChevronUp size={8} className={`${currentSort.key === sortKey && currentSort.direction === 'asc' ? 'text-emerald-400' : 'text-gray-700'}`} />
+            <ChevronDown size={8} className={`${currentSort.key === sortKey && currentSort.direction === 'desc' ? 'text-emerald-400' : 'text-gray-700'}`} />
+        </div>
+    </div>
+);
+
 /**
  * Individual Stock Row - Memoized for performance
  */
@@ -170,7 +225,7 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
         </div>
 
         {/* Stock Name */}
-        <div className="flex-1 min-w-[120px] px-3">
+        <div className="flex-1 min-w-[100px] px-2 md:px-3">
             <div className="font-bold text-white text-base tracking-tight group-hover:text-blue-400 transition-colors">
                 {stock.symbol}
             </div>
@@ -180,7 +235,7 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
         </div>
 
         {/* Price */}
-        <div className="w-28 px-3">
+        <div className="w-24 md:w-28 px-2 md:px-3">
             <div className="font-mono text-[15px] font-medium text-gray-200">
                 ₹{Number(stock.price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
@@ -192,7 +247,7 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
         </div>
 
         {/* Trend Sparkline */}
-        <div className="w-28 px-3 flex justify-center">
+        <div className="w-24 md:w-28 px-2 md:px-3 flex justify-center hidden sm:block">
             <Sparkline
                 data={stock.priceHistory}
                 width={100}
@@ -202,12 +257,12 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
         </div>
 
         {/* Shariah Status */}
-        <div className="w-24 px-3 flex justify-center">
+        <div className="w-20 md:w-24 px-2 md:px-3 flex justify-center">
             <ShariahBadge status={stock.shariahStatus} />
         </div>
 
         {/* RSI */}
-        <div className="w-16 px-3 text-center">
+        <div className="w-14 md:w-16 px-2 md:px-3 text-center hidden sm:block">
             <span className={`font-mono font-bold text-sm ${stock.technicals?.rsi < 30 ? 'text-emerald-400' :
                 stock.technicals?.rsi > 70 ? 'text-red-400' : 'text-gray-400'
                 }`}>
@@ -216,7 +271,7 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
         </div>
 
         {/* Signal */}
-        <div className="w-24 px-3 flex justify-end">
+        <div className="w-20 md:w-24 px-2 md:px-3 flex justify-end">
             <SignalBadge signal={stock.technicals?.signal} />
         </div>
     </div>

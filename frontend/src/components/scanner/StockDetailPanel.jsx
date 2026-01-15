@@ -147,6 +147,16 @@ export const StockDetailPanel = ({ stock }) => {
                             date="2025-12-29 15:44"
                             title={`${stock.symbol} leads sector gains on strong quarterly volume growth`}
                         />
+                        <NewsItem
+                            source="Economic Times"
+                            date="2025-12-28 09:15"
+                            title="FIIs increase stake in Indian banking sector, bullish on long-term growth"
+                        />
+                        <NewsItem
+                            source="MoneyControl"
+                            date="2025-12-27 14:20"
+                            title={`Technical Breakout: ${stock.symbol} crosses key resistance level with high volume`}
+                        />
                     </div>
                 )}
             </div>

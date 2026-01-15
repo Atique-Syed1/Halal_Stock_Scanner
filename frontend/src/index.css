@@ -80,49 +80,149 @@
   --color-blue-light: rgba(56, 189, 248, 0.15);
 }
 
-/* Sunset Theme (Warm) */
+/* Sunset Theme (Warm & Vibrant) */
 .theme-sunset {
-  --bg-primary: #180818;
-  /* Deep Plum */
-  --bg-secondary: #251025;
-  --bg-tertiary: #3a1a3a;
-  --bg-hover: #4d204d;
+  --bg-primary: #120a1f;
+  /* Deep Violet Black */
+  --bg-secondary: #1e112a;
+  /* Dark Plum */
+  --bg-tertiary: #2d1b3e;
+  /* Rich Violet */
+  --bg-hover: #4a2b5e;
   --text-primary: #fce7f3;
   /* Pinkish White */
   --text-secondary: #fbcfe8;
-  --text-muted: #db2777;
-  --border-color: rgba(244, 114, 182, 0.2);
-  --color-primary: #f472b6;
-  /* Pink 400 */
-  --gradient-primary: linear-gradient(135deg, #f472b6 0%, #e11d48 100%);
-  --gradient-dark: linear-gradient(180deg, #180818 0%, #100510 100%);
-
+  --text-muted: #e879f9;
+  /* Light Fuchsia */
+  --border-color: rgba(244, 63, 94, 0.2);
+  --color-primary: #f43f5e;
+  /* Rose 500 */
+  --gradient-primary: linear-gradient(135deg, #f43f5e 0%, #d946ef 100%);
+  /* Rose to Fuchsia */
+  --gradient-dark: linear-gradient(180deg, #120a1f 0%, #0a0512 100%);
+  
   /* Status colors override */
-  --color-emerald-light: #4ade80;
-  --color-red-light: #fb7185;
-  --color-blue-light: rgba(244, 114, 182, 0.15);
+  --color-emerald-light: #f472b6; /* Pink/Green hybrid for positive in sunset context */
+  --color-red-light: #ef4444;
+  --color-blue-light: rgba(217, 70, 239, 0.15); /* Fuchsia tint */
 }
 
-/* Forest Theme (Nature) */
+/* Forest Theme (Lush & Organic) */
 .theme-forest {
-  --bg-primary: #05190f;
-  /* Deep Green */
-  --bg-secondary: #0a2617;
-  --bg-tertiary: #133a25;
-  --bg-hover: #1c4d32;
-  --text-primary: #dcfce7;
-  --text-secondary: #86efac;
-  --text-muted: #22c55e;
-  --border-color: rgba(34, 197, 94, 0.2);
-  --color-primary: #4ade80;
-  /* Green 400 */
-  --gradient-primary: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
-  --gradient-dark: linear-gradient(180deg, #05190f 0%, #020c07 100%);
+  --bg-primary: #02120a;
+  /* Very Deep Moss */
+  --bg-secondary: #062114;
+  /* Dark Jungle */
+  --bg-tertiary: #0d3321;
+  /* Forest Green */
+  --bg-hover: #164d30;
+  --text-primary: #ecfdf5;
+  /* Mint White */
+  --text-secondary: #a7f3d0;
+  /* Light Emerald */
+  --text-muted: #34d399;
+  /* Emerald 400 */
+  --border-color: rgba(34, 197, 94, 0.25);
+  --color-primary: #22c55e;
+  /* Green 500 */
+  --gradient-primary: linear-gradient(135deg, #22c55e 0%, #0d9488 100%);
+  /* Emerald to Teal */
+  --gradient-dark: linear-gradient(180deg, #02120a 0%, #000803 100%);
 
   /* Status colors override */
   --color-emerald-light: #4ade80;
   --color-red-light: #ef4444;
-  --color-blue-light: rgba(74, 222, 128, 0.15);
+  --color-blue-light: rgba(34, 197, 94, 0.15);
+}
+
+/* ====================================================================
+   CUSTOM DARK THEMES OVERRIDES (Ocean, Sunset, Forest)
+   ==================================================================== */
+
+.theme-ocean body, .theme-sunset body, .theme-forest body,
+.theme-ocean .bg-gray-900, .theme-sunset .bg-gray-900, .theme-forest .bg-gray-900 {
+    background: var(--gradient-dark) !important;
+}
+
+.theme-ocean .bg-gray-800, .theme-sunset .bg-gray-800, .theme-forest .bg-gray-800,
+.theme-ocean .bg-gray-800\/50, .theme-sunset .bg-gray-800\/50, .theme-forest .bg-gray-800\/50,
+.theme-ocean .bg-gray-800\/40, .theme-sunset .bg-gray-800\/40, .theme-forest .bg-gray-800\/40,
+.theme-ocean .bg-gray-700, .theme-sunset .bg-gray-700, .theme-forest .bg-gray-700 {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.theme-ocean .text-gray-100, .theme-sunset .text-gray-100, .theme-forest .text-gray-100,
+.theme-ocean .text-white, .theme-sunset .text-white, .theme-forest .text-white {
+    color: var(--text-primary) !important;
+}
+
+.theme-ocean .text-gray-300, .theme-sunset .text-gray-300, .theme-forest .text-gray-300 {
+    color: var(--text-secondary) !important;
+}
+
+.theme-ocean .text-gray-400, .theme-sunset .text-gray-400, .theme-forest .text-gray-400,
+.theme-ocean .text-gray-500, .theme-sunset .text-gray-500, .theme-forest .text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+.theme-ocean .border-gray-700, .theme-sunset .border-gray-700, .theme-forest .border-gray-700,
+.theme-ocean .border-gray-700\/50, .theme-sunset .border-gray-700\/50, .theme-forest .border-gray-700\/50,
+.theme-ocean .border-gray-600, .theme-sunset .border-gray-600, .theme-forest .border-gray-600 {
+    border-color: var(--border-color) !important;
+}
+
+/* Glass Cards in Custom Themes */
+.theme-ocean .glass-card, .theme-sunset .glass-card, .theme-forest .glass-card,
+.theme-ocean .stat-card, .theme-sunset .stat-card, .theme-forest .stat-card {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Inputs in Custom Themes */
+.theme-ocean input, .theme-sunset input, .theme-forest input,
+.theme-ocean select, .theme-sunset select, .theme-forest select,
+.theme-ocean textarea, .theme-sunset textarea {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Primary Brand Colors Overrides for Themes */
+.theme-ocean .text-emerald-400, .theme-sunset .text-emerald-400, .theme-forest .text-emerald-400,
+.theme-ocean .text-emerald-500, .theme-sunset .text-emerald-500, .theme-forest .text-emerald-500 {
+    color: var(--color-primary) !important;
+}
+
+.theme-ocean .bg-emerald-500, .theme-sunset .bg-emerald-500, .theme-forest .bg-emerald-500,
+.theme-ocean .bg-emerald-400, .theme-sunset .bg-emerald-400, .theme-forest .bg-emerald-400 {
+    background-color: var(--color-primary) !important;
+}
+
+.theme-ocean .bg-emerald-500\/20, .theme-sunset .bg-emerald-500\/20, .theme-forest .bg-emerald-500\/20 {
+    background-color: rgba(var(--color-primary), 0.2) !important; /* Fallback if var has no rgb */
+    border-color: var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+/* Gradient Text for Headings */
+.theme-ocean .bg-clip-text, .theme-sunset .bg-clip-text, .theme-forest .bg-clip-text {
+    background-image: var(--gradient-primary) !important;
+}
+
+/* Buttons */
+.theme-ocean .btn-primary, .theme-sunset .btn-primary, .theme-forest .btn-primary {
+    background: var(--gradient-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2) !important;
+}
+
+/* Header/Nav */
+.theme-ocean header, .theme-ocean nav,
+.theme-sunset header, .theme-sunset nav,
+.theme-forest header, .theme-forest nav {
+    background-color: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
 }
 
 

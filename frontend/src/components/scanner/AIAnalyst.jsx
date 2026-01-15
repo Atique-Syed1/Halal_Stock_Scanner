@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bot, X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import API from '../../config/api';
-import ReactMarkdown from 'react-markdown'; // Assuming react-markdown is not installed, I'll use simple rendering
+// import ReactMarkdown from 'react-markdown'; // Removed to avoid dependency issues
 
 export const AIAnalystModal = ({ isOpen, onClose, stock }) => {
     const [analysis, setAnalysis] = useState(null);
@@ -82,9 +82,13 @@ export const AIAnalystModal = ({ isOpen, onClose, stock }) => {
                             {/* Detailed Text */}
                             <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
                                 <div className="prose prose-invert prose-sm text-gray-300">
-                                    <ReactMarkdown>
-                                        {analysis.details}
-                                    </ReactMarkdown>
+                                    {/* Simple Markdown Rendering if component fails */}
+                                    {analysis.details.split('\n').map((line, i) => (
+                                        <p key={i} className="mb-2" dangerouslySetInnerHTML={{ 
+                                            __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                                        .replace(/^- /, '• ')
+                                        }} />
+                                    ))}
                                 </div>
                             </div>
 

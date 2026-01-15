@@ -87,6 +87,9 @@ const HalalTradeApp = () => {
     const [refreshKey, setRefreshKey] = useState(0);
     const [useLiveMode] = useLocalStorage('halaltrade-live', true);
 
+    // Refs
+    const detailPanelRef = useRef(null);
+
     // Apply dark/light mode to document
     // Apply theme to document
     useEffect(() => {
@@ -468,13 +471,21 @@ const HalalTradeApp = () => {
                                 <StockTable
                                     stocks={displayedStocks}
                                     selectedStock={selectedStock}
-                                    onSelectStock={setSelectedStock}
+                                    onSelectStock={(stock) => {
+                                        setSelectedStock(stock);
+                                        // Scroll to detail panel on mobile
+                                        if (window.innerWidth < 1024 && detailPanelRef.current) {
+                                            setTimeout(() => {
+                                                detailPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                            }, 100);
+                                        }
+                                    }}
                                     wsConnected={wsConnected}
                                     isInWatchlist={isInWatchlist}
                                     onToggleWatchlist={toggleWatchlist}
                                 />
 
-                                <div className="flex flex-col gap-4">
+                                <div className="flex flex-col gap-4" ref={detailPanelRef}>
                                     {selectedStock ? (
                                         <ErrorBoundary>
                                             <Suspense fallback={<PageLoadingSkeleton />}>
@@ -630,16 +641,16 @@ const Header = ({
     onOpenPortfolio, onOpenAlerts, onOpenCompare,
     stocks
 }) => (
-    <div className="max-w-7xl mx-auto mb-8">
+    <div className="max-w-7xl mx-auto mb-6 md:mb-8">
         <div className="flex flex-col xl:flex-row justify-between items-center gap-6 p-1">
             {/* BRANDING SECTION */}
-            <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">
                 <div>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-3">
-                        <ScanLine className="w-10 h-10 text-emerald-400" />
+                    <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-3 justify-center md:justify-start">
+                        <ScanLine className="w-8 h-8 md:w-10 md:h-10 text-emerald-400" />
                         Stock Scanner
                     </h1>
-                    <div className="flex items-center gap-2 mt-2 ml-1">
+                    <div className="flex items-center gap-2 mt-2 ml-1 justify-center md:justify-start">
                         <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${wsConnected ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500'}`}>
                             <Wifi className={`w-3 h-3 ${wsConnected ? 'animate-pulse' : ''}`} />
                             {wsConnected ? 'Live Market Active' : wsConnecting ? 'Connecting...' : 'Connecting...'}
@@ -653,58 +664,61 @@ const Header = ({
                 </div>
             </div>
 
-            {/* ACTION TOOLBAR */}
-            <div className="flex flex-col md:flex-row items-center gap-4 bg-gray-800/40 p-2 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
+            {/* ACTION TOOLBAR - Responsive Wrap */}
+            <div className="w-full xl:w-auto flex flex-col sm:flex-row items-center gap-3 bg-gray-800/40 p-2 rounded-2xl border border-gray-700/50 backdrop-blur-sm">
 
-                {/* GROUP 1: NAVIGATION */}
-                <div className="flex items-center gap-2 pr-4 md:border-r border-gray-700/50">
-                    <button
-                        onClick={onOpenPortfolio}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all text-gray-400 hover:text-white hover:bg-gray-700/50"
-                    >
-                        <div className="md:hidden">💼</div>
-                        <span className="hidden md:inline">Portfolio</span>
-                    </button>
+                {/* GROUP 1 & 2 WRAPPER FOR MOBILE */}
+                <div className="flex w-full sm:w-auto justify-between sm:justify-start gap-2">
+                    {/* GROUP 1: NAVIGATION */}
+                    <div className="flex items-center gap-1 md:gap-2 pr-2 sm:pr-4 sm:border-r border-gray-700/50">
+                        <button
+                            onClick={onOpenPortfolio}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all text-gray-400 hover:text-white hover:bg-gray-700/50"
+                        >
+                            <div className="md:hidden">💼</div>
+                            <span className="hidden md:inline">Portfolio</span>
+                        </button>
 
-                    <WatchlistIndicator
-                        count={watchlistCount}
-                        onClick={onOpenWatchlist}
-                    />
-                </div>
+                        <WatchlistIndicator
+                            count={watchlistCount}
+                            onClick={onOpenWatchlist}
+                        />
+                    </div>
 
-                {/* GROUP 2: TOOLS */}
-                <div className="flex items-center gap-2 pr-4 md:border-r border-gray-700/50">
-                    <StockListButton
-                        onClick={onOpenStockList}
-                        count={stockListCount}
-                    />
+                    {/* GROUP 2: TOOLS */}
+                    <div className="flex items-center gap-1 md:gap-2 pr-0 sm:pr-4 sm:border-r border-gray-700/50">
+                        <StockListButton
+                            onClick={onOpenStockList}
+                            count={stockListCount}
+                        />
 
-                    <button
-                        onClick={onOpenCompare}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all tooltip"
-                        title="Compare Stocks"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5" /><path d="M21 3l-7 7" /><path d="M21 21v-5h-5" /><path d="M21 21l-7-7" /><path d="M3 21h5v-5" /><path d="M3 21l7-7" /><path d="M3 3h5v5" /><path d="M3 3l7 7" /></svg>
-                    </button>
+                        <button
+                            onClick={onOpenCompare}
+                            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all tooltip"
+                            title="Compare Stocks"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5" /><path d="M21 3l-7 7" /><path d="M21 21v-5h-5" /><path d="M21 21l-7-7" /><path d="M3 21h5v-5" /><path d="M3 21l7-7" /><path d="M3 3h5v5" /><path d="M3 3l7 7" /></svg>
+                        </button>
 
-                    <button
-                        onClick={onOpenAlerts}
-                        className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all tooltip"
-                        title="Alerts"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-                    </button>
+                        <button
+                            onClick={onOpenAlerts}
+                            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all tooltip"
+                            title="Alerts"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                        </button>
 
-                    <TelegramButton
-                        onClick={onOpenTelegram}
-                        isEnabled={telegramEnabled}
-                    />
+                        <TelegramButton
+                            onClick={onOpenTelegram}
+                            isEnabled={telegramEnabled}
+                        />
 
-                    <ExportButton stocks={stocks} type="scan" />
+                        <ExportButton stocks={stocks} type="scan" />
+                    </div>
                 </div>
 
                 {/* GROUP 3: PRIMARY ACTION */}
-                <div className="flex items-center gap-3 pl-2">
+                <div className="flex w-full sm:w-auto items-center gap-3 pl-0 sm:pl-2">
                     <button
                         onClick={() => setShowHalalOnly(!showHalalOnly)}
                         className={`p-2 rounded-lg transition-all border ${showHalalOnly
@@ -718,10 +732,10 @@ const Header = ({
                     <button
                         onClick={handleScan}
                         disabled={isScanning}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-900/20"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-900/20"
                     >
                         {isScanning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                        <span>{isScanning ? 'Scanning...' : 'Scan Market'}</span>
+                        <span>{isScanning ? 'Scanning...' : 'Scan'}</span>
                     </button>
                 </div>
             </div>
@@ -747,7 +761,7 @@ const ErrorBanner = ({ message }) => (
  * Stats Cards
  */
 const StatsCards = ({ stocks, wsConnected, priceUpdates }) => (
-    <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+    <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
         <StatCard
             label="Total Scanned"
             value={stocks.length}
@@ -772,7 +786,7 @@ const StatsCards = ({ stocks, wsConnected, priceUpdates }) => (
             icon={<Target className="w-4 h-4" />}
         />
         {wsConnected && (
-            <div className="stat-card card-hover group">
+            <div className="stat-card card-hover group col-span-2 sm:col-span-1">
                 <p className="text-gray-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-1">
                     <Zap className="w-3 h-3 text-yellow-400 animate-pulse" /> Live Updates
                 </p>

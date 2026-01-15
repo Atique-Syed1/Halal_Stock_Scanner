@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import API from '../../config/api';
 import { DashboardSkeleton } from '../common/LoadingSkeleton';
+import WinRateWidget from './WinRateWidget';
+import RiskMetricsWidget from './RiskMetricsWidget';
 
 /**
  * ====================================================================
@@ -289,7 +291,7 @@ const Dashboard = ({ onNavigateToScanner }) => {
             setLoading(true);
             const [dashRes, perfRes] = await Promise.all([
                 fetch(API.DASHBOARD),
-                fetch(`${API.DASHBOARD}/performance?period=${selectedPeriod}`)
+                fetch(API.DASHBOARD_PERFORMANCE(selectedPeriod))
             ]);
 
             if (!dashRes.ok) throw new Error('Failed to fetch dashboard');
@@ -397,6 +399,12 @@ const Dashboard = ({ onNavigateToScanner }) => {
                 />
             </div>
 
+            {/* Analytics Widgets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <WinRateWidget />
+                <RiskMetricsWidget />
+            </div>
+
             {/* Performance Chart Section */}
             <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -409,11 +417,10 @@ const Dashboard = ({ onNavigateToScanner }) => {
                             <button
                                 key={period}
                                 onClick={() => setSelectedPeriod(period)}
-                                className={`px-3 py-1 rounded text-xs font-medium transition ${
-                                    selectedPeriod === period
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                                }`}
+                                className={`px-3 py-1 rounded text-xs font-medium transition ${selectedPeriod === period
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                    }`}
                             >
                                 {period.toUpperCase()}
                             </button>

@@ -3,7 +3,6 @@
 export { LivePriceCell, ConnectionStatus } from './LivePriceCell';
 export { Sparkline, PriceChart } from './Sparkline';
 export { ExportButton, ExportButtons } from './ExportButton';
-export { InteractiveChart } from './InteractiveChart';
 export { PWAInstallPrompt, NotificationToggle, sendNotification } from './PWAComponents';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export {
@@ -16,5 +15,6 @@ export {
     StockDetailSkeleton,
     ChartSkeleton
 } from './LoadingSkeleton';
-export { default as LanguageSelector } from './LanguageSelector';
 export { default as ChartExport } from './ChartExport';
+export { ThemeSelector } from './ThemeSelector';
+export { PullToRefresh } from './PullToRefresh';

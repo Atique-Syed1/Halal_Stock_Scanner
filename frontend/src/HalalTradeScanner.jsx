@@ -4,7 +4,6 @@ import {
     Search,
     Filter,
     RefreshCw,
-    Server,
     Wifi,
     WifiOff,
     Zap,
@@ -15,16 +14,19 @@ import {
     Sun,
     LayoutDashboard,
     ScanLine,
-    Command
+    Command,
+    Globe
 } from 'lucide-react';
 
 // Import components from subfolders
-import { ConnectionStatus, ExportButton, PWAInstallPrompt, NotificationToggle, PageLoadingSkeleton, ModalSkeleton, LanguageSelector } from './components/common';
+import { ConnectionStatus, ExportButton, PWAInstallPrompt, NotificationToggle, PageLoadingSkeleton, ModalSkeleton, ThemeSelector, PullToRefresh } from './components/common';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { useToast } from './components/common/Toast';
 import { MobileBottomNav } from './components/common/MobileBottomNav';
 import { StockTable, WatchlistPanel, WatchlistIndicator } from './components/scanner';
 import { CommandPalette } from './components/common/CommandPalette';
+import OnboardingTour from './components/common/OnboardingTour';
+import ShortcutsModal from './components/common/ShortcutsModal';
 
 // Lazy load heavy components for code splitting
 const Dashboard = lazy(() => import('./components/dashboard/Dashboard'));
@@ -34,6 +36,7 @@ const TelegramSettings = lazy(() => import('./components/settings/TelegramSettin
 const StockListSettings = lazy(() => import('./components/settings/StockListSettings'));
 const AlertSettings = lazy(() => import('./components/settings/AlertSettings'));
 const Portfolio = lazy(() => import('./components/portfolio/Portfolio'));
+const MarketOverview = lazy(() => import('./components/market/MarketOverview'));
 
 // Import non-lazy settings buttons (small components - direct import)
 const TelegramButton = lazy(() => import('./components/settings/TelegramSettings').then(m => ({ default: m.TelegramButton })));
@@ -44,9 +47,6 @@ import { useWatchlist } from './hooks/useWatchlist';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
-
-// Import data utilities
-import { generateMockData } from './data/stockData';
 
 // Import API config
 import API from './config/api';
@@ -61,7 +61,6 @@ const HalalTradeApp = () => {
     const toast = useToast();
 
     // Core state
-    const [useLiveMode, setUseLiveMode] = useState(false);
     const [stocks, setStocks] = useState([]);
     const [previousPrices, setPreviousPrices] = useState({});
     const [isScanning, setIsScanning] = useState(false);
@@ -71,7 +70,7 @@ const HalalTradeApp = () => {
 
     // Navigation & Theme state
     const [activeTab, setActiveTab] = useLocalStorage('halaltrade-tab', 'dashboard');
-    const [darkMode, setDarkMode] = useLocalStorage('halaltrade-darkmode', true);
+    const [theme, setTheme] = useLocalStorage('halaltrade-theme', 'dark');
 
     // UI state
     const [watchlistOpen, setWatchlistOpen] = useState(false);
@@ -81,26 +80,29 @@ const HalalTradeApp = () => {
     const [portfolioOpen, setPortfolioOpen] = useState(false);
     const [alertOpen, setAlertOpen] = useState(false);
     const [compareOpen, setCompareOpen] = useState(false);
+    const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
     // Data state
     const [universeInfo, setUniverseInfo] = useState({ count: 25, name: 'Default' });
     const [telegramEnabled, setTelegramEnabled] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [useLiveMode, setUseLiveMode] = useLocalStorage('halaltrade-live', true);
 
     // Apply dark/light mode to document
+    // Apply theme to document
     useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.remove('light-mode');
-        } else {
-            document.documentElement.classList.add('light-mode');
-        }
-    }, [darkMode]);
+        document.documentElement.className = '';
+        if (theme === 'light') document.documentElement.classList.add('light-mode');
+        else if (theme !== 'dark') document.documentElement.classList.add(`theme-${theme}`);
+    }, [theme]);
 
     // Keyboard shortcuts
     useKeyboardShortcuts({
         'ctrl+k': () => setCommandPaletteOpen(true),
         'ctrl+1': () => setActiveTab('dashboard'),
         'ctrl+2': () => setActiveTab('scanner'),
-        'ctrl+shift+t': () => setDarkMode(!darkMode),
+        'ctrl+shift+t': () => setTheme(curr => curr === 'light' ? 'dark' : 'light'),
+        '?': () => setShortcutsOpen(true),
         'escape': () => {
             if (commandPaletteOpen) setCommandPaletteOpen(false);
             else if (selectedStock) setSelectedStock(null);
@@ -138,6 +140,15 @@ const HalalTradeApp = () => {
         watchlistCount
     } = useWatchlist();
 
+    const handleRefresh = async () => {
+        if (activeTab === 'scanner') {
+            await handleScan();
+        } else {
+            setRefreshKey(k => k + 1);
+            await new Promise(r => setTimeout(r, 600));
+        }
+    };
+
     // WebSocket state
     const [wsConnected, setWsConnected] = useState(false);
     const [wsConnecting, setWsConnecting] = useState(false);
@@ -148,7 +159,9 @@ const HalalTradeApp = () => {
 
     // WebSocket connection handler
     const connectWebSocket = useCallback(() => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) return;
+        if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+            return;
+        }
 
         setWsConnecting(true);
         setErrorMsg('');
@@ -220,12 +233,14 @@ const HalalTradeApp = () => {
             };
 
             ws.onclose = () => {
+                if (wsRef.current !== ws && wsRef.current !== null) return;
                 console.log('[WS] Connection closed');
                 setWsConnected(false);
                 setWsConnecting(false);
                 wsRef.current = null;
 
-                if (useLiveMode) {
+                // Only reconnect if live mode is enabled and tab is scanner (or always if desired)
+                if (typeof useLiveMode !== 'undefined' && useLiveMode) {
                     reconnectTimeoutRef.current = setTimeout(() => {
                         console.log('[WS] Attempting reconnect...');
                         connectWebSocket();
@@ -234,6 +249,7 @@ const HalalTradeApp = () => {
             };
 
             ws.onerror = (error) => {
+                if (wsRef.current !== ws && wsRef.current !== null) return;
                 console.error('[WS] Error:', error);
                 setErrorMsg('WebSocket connection failed. Is the backend running?');
                 toast.error('Connection Failed', 'Could not connect to live price stream');
@@ -246,7 +262,7 @@ const HalalTradeApp = () => {
             toast.error('Connection Error', 'Failed to establish WebSocket connection');
             setWsConnecting(false);
         }
-    }, [useLiveMode]);
+    }, []);
 
     const disconnectWebSocket = useCallback(() => {
         if (reconnectTimeoutRef.current) {
@@ -260,48 +276,35 @@ const HalalTradeApp = () => {
         setWsConnecting(false);
     }, []);
 
-    // Handle mode toggle
+    // Connect WebSocket on mount
     useEffect(() => {
-        if (useLiveMode) {
-            connectWebSocket();
-        } else {
-            disconnectWebSocket();
-            setStocks(generateMockData());
-            setPreviousPrices({});
-        }
-
+        connectWebSocket();
         return () => {
             disconnectWebSocket();
         };
-    }, [useLiveMode, connectWebSocket, disconnectWebSocket]);
+    }, [connectWebSocket, disconnectWebSocket]);
 
     const handleScan = async () => {
         setIsScanning(true);
         setErrorMsg('');
         setSelectedStock(null);
 
-        if (useLiveMode) {
-            try {
-                const response = await fetch(API.SCAN);
-                if (!response.ok) throw new Error('Failed to connect to Local Backend');
+        try {
+            const response = await fetch(API.SCAN);
+            if (!response.ok) throw new Error('Failed to connect to backend');
 
-                const data = await response.json();
-                setStocks(data);
+            const data = await response.json();
+            setStocks(data);
 
-                if (!wsConnected) {
-                    connectWebSocket();
-                }
-            } catch (err) {
-                console.error(err);
-                setErrorMsg('Connection Failed: Is "trade_bot_backend.py" running?');
-            } finally {
-                setIsScanning(false);
+            if (!wsConnected) {
+                connectWebSocket();
             }
-        } else {
-            setTimeout(() => {
-                setStocks(generateMockData());
-                setIsScanning(false);
-            }, 1000);
+        } catch (err) {
+            console.error(err);
+            setErrorMsg('Connection Failed: Is the backend server running?');
+            toast.error('Scan Failed', 'Could not connect to backend server');
+        } finally {
+            setIsScanning(false);
         }
     };
 
@@ -319,8 +322,8 @@ const HalalTradeApp = () => {
                         {/* LOGO & TABS */}
                         <div className="flex items-center gap-8">
                             <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-2">
-                                <ShieldCheck className="w-7 h-7 text-emerald-400" />
-                                HalalTrade Pro
+                                <ScanLine className="w-7 h-7 text-emerald-400" />
+                                Stock Scanner
                             </h1>
 
                             {/* Navigation Tabs */}
@@ -334,6 +337,16 @@ const HalalTradeApp = () => {
                                 >
                                     <LayoutDashboard size={16} />
                                     Dashboard
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('market')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'market'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                        }`}
+                                >
+                                    <Globe size={16} />
+                                    Market
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('scanner')}
@@ -361,28 +374,11 @@ const HalalTradeApp = () => {
                                 <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-gray-700 rounded">⌘K</kbd>
                             </button>
 
-                            {/* Live Mode Badge */}
-                            {useLiveMode && wsConnected && (
-                                <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border bg-emerald-500/10 border-emerald-500/30 text-emerald-500">
-                                    <Wifi className="w-3 h-3 animate-pulse" />
-                                    Live
-                                </div>
-                            )}
-
                             {/* Notification Toggle */}
                             <NotificationToggle />
 
-                            {/* Language Selector */}
-                            <LanguageSelector />
-
-                            {/* Dark Mode Toggle */}
-                            <button
-                                onClick={() => setDarkMode(!darkMode)}
-                                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all"
-                                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                            >
-                                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-                            </button>
+                            {/* Theme Selector */}
+                            <ThemeSelector currentTheme={theme} onThemeChange={setTheme} />
 
                             {/* Mobile Tabs */}
                             <div className="flex md:hidden items-center gap-1 bg-gray-800/50 rounded-lg p-1">
@@ -394,6 +390,15 @@ const HalalTradeApp = () => {
                                         }`}
                                 >
                                     <LayoutDashboard size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('market')}
+                                    className={`p-2 rounded-md transition-all ${activeTab === 'market'
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : 'text-gray-400'
+                                        }`}
+                                >
+                                    <Globe size={18} />
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('scanner')}
@@ -411,83 +416,88 @@ const HalalTradeApp = () => {
             </nav>
 
             {/* MAIN CONTENT */}
-            <main className="p-4 md:p-8">
-                {activeTab === 'dashboard' ? (
-                    <div className="max-w-7xl mx-auto">
-                        <ErrorBoundary>
-                            <Suspense fallback={<PageLoadingSkeleton />}>
-                                <Dashboard onNavigateToScanner={() => setActiveTab('scanner')} />
-                            </Suspense>
-                        </ErrorBoundary>
-                    </div>
-                ) : (
-                    <>
-                        {/* SCANNER HEADER */}
-                        <Header
-                            useLiveMode={useLiveMode}
-                            setUseLiveMode={setUseLiveMode}
-                            showHalalOnly={showHalalOnly}
-                            setShowHalalOnly={setShowHalalOnly}
-                            isScanning={isScanning}
-                            handleScan={handleScan}
-                            wsConnected={wsConnected}
-                            wsConnecting={wsConnecting}
-                            lastUpdate={lastUpdate}
-                            watchlistCount={watchlistCount}
-                            onOpenWatchlist={() => setWatchlistOpen(true)}
-                            telegramEnabled={telegramEnabled}
-                            onOpenTelegram={() => setTelegramOpen(true)}
-
-                            stockListCount={universeInfo.count}
-                            onOpenStockList={() => setStockListOpen(true)}
-                            onOpenPortfolio={() => setPortfolioOpen(true)}
-                            onOpenAlerts={() => setAlertOpen(true)}
-                            onOpenCompare={() => setCompareOpen(true)}
-                            stocks={stocks}
-                        />
-
-                        {/* ERROR MESSAGE */}
-                        {errorMsg && <ErrorBanner message={errorMsg} />}
-
-                        {/* STATS CARDS */}
-                        <StatsCards
-                            stocks={stocks}
-                            useLiveMode={useLiveMode}
-                            priceUpdates={priceUpdates}
-                        />
-
-                        {/* MAIN CONTENT */}
-                        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <StockTable
-                                stocks={displayedStocks}
-                                selectedStock={selectedStock}
-                                onSelectStock={setSelectedStock}
-                                previousPrices={previousPrices}
-                                useLiveMode={useLiveMode}
+            <PullToRefresh onRefresh={handleRefresh}>
+                <main className="p-4 md:p-8">
+                    {activeTab === 'dashboard' ? (
+                        <div className="max-w-7xl mx-auto">
+                            <ErrorBoundary>
+                                <Suspense fallback={<PageLoadingSkeleton />}>
+                                    <Dashboard key={refreshKey} onNavigateToScanner={() => setActiveTab('scanner')} />
+                                </Suspense>
+                            </ErrorBoundary>
+                        </div>
+                    ) : activeTab === 'market' ? (
+                        <div className="max-w-7xl mx-auto">
+                            <ErrorBoundary>
+                                <Suspense fallback={<PageLoadingSkeleton />}>
+                                    <MarketOverview key={refreshKey} />
+                                </Suspense>
+                            </ErrorBoundary>
+                        </div>
+                    ) : (
+                        <>
+                            {/* SCANNER HEADER */}
+                            <Header
+                                showHalalOnly={showHalalOnly}
+                                setShowHalalOnly={setShowHalalOnly}
+                                isScanning={isScanning}
+                                handleScan={handleScan}
                                 wsConnected={wsConnected}
-                                isInWatchlist={isInWatchlist}
-                                onToggleWatchlist={toggleWatchlist}
+                                wsConnecting={wsConnecting}
+                                lastUpdate={lastUpdate}
+                                watchlistCount={watchlistCount}
+                                onOpenWatchlist={() => setWatchlistOpen(true)}
+                                telegramEnabled={telegramEnabled}
+                                onOpenTelegram={() => setTelegramOpen(true)}
+                                stockListCount={universeInfo.count}
+                                onOpenStockList={() => setStockListOpen(true)}
+                                onOpenPortfolio={() => setPortfolioOpen(true)}
+                                onOpenAlerts={() => setAlertOpen(true)}
+                                onOpenCompare={() => setCompareOpen(true)}
+                                stocks={stocks}
                             />
 
-                            <div className="flex flex-col gap-4">
-                                {selectedStock ? (
-                                    <ErrorBoundary>
-                                        <Suspense fallback={<PageLoadingSkeleton />}>
-                                            <StockDetailPanel
-                                                stock={selectedStock}
-                                                useLiveMode={useLiveMode}
-                                                wsConnected={wsConnected}
-                                            />
-                                        </Suspense>
-                                    </ErrorBoundary>
-                                ) : (
-                                    <EmptyDetailPanel />
-                                )}
+                            {/* ERROR MESSAGE */}
+                            {errorMsg && <ErrorBanner message={errorMsg} />}
+
+                            {/* STATS CARDS */}
+                            <StatsCards
+                                stocks={stocks}
+                                wsConnected={wsConnected}
+                                priceUpdates={priceUpdates}
+                            />
+
+                            {/* MAIN CONTENT */}
+                            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <StockTable
+                                    stocks={displayedStocks}
+                                    selectedStock={selectedStock}
+                                    onSelectStock={setSelectedStock}
+                                    previousPrices={previousPrices}
+                                    wsConnected={wsConnected}
+                                    isInWatchlist={isInWatchlist}
+                                    onToggleWatchlist={toggleWatchlist}
+                                />
+
+                                <div className="flex flex-col gap-4">
+                                    {selectedStock ? (
+                                        <ErrorBoundary>
+                                            <Suspense fallback={<PageLoadingSkeleton />}>
+                                                <StockDetailPanel
+                                                    stock={selectedStock}
+                                                    wsConnected={wsConnected}
+                                                />
+                                            </Suspense>
+                                        </ErrorBoundary>
+                                    ) : (
+                                        <EmptyDetailPanel />
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </>
-                )}
-            </main>
+                        </>
+                    )}
+                </main>
+            </PullToRefresh>
 
             {/* WATCHLIST MODAL */}
             <WatchlistPanel
@@ -584,8 +594,8 @@ const HalalTradeApp = () => {
                     else if (tab === 'alerts') setAlertOpen(true);
                     else setActiveTab(tab);
                 }}
-                onToggleTheme={() => setDarkMode(!darkMode)}
-                darkMode={darkMode}
+                onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                darkMode={theme === 'dark' || theme === 'ocean' || theme === 'sunset' || theme === 'forest'}
             />
 
             {/* PWA Install Prompt */}
@@ -599,6 +609,15 @@ const HalalTradeApp = () => {
                 onOpenAlerts={() => setAlertOpen(true)}
                 onOpenSearch={() => setCommandPaletteOpen(true)}
             />
+
+            {/* Keyboard Shortcuts Modal */}
+            <ShortcutsModal
+                isOpen={shortcutsOpen}
+                onClose={() => setShortcutsOpen(false)}
+            />
+
+            {/* Onboarding Tour */}
+            <OnboardingTour />
         </div>
     );
 };
@@ -607,7 +626,6 @@ const HalalTradeApp = () => {
  * Header Component (Scanner Tab Only)
  */
 const Header = ({
-    useLiveMode, setUseLiveMode,
     showHalalOnly, setShowHalalOnly,
     isScanning, handleScan,
     wsConnected, wsConnecting, lastUpdate,
@@ -623,22 +641,15 @@ const Header = ({
             <div className="flex flex-col md:flex-row items-center gap-6">
                 <div>
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center gap-3">
-                        <ShieldCheck className="w-10 h-10 text-emerald-400" />
-                        HalalTrade Pro
+                        <ScanLine className="w-10 h-10 text-emerald-400" />
+                        Stock Scanner
                     </h1>
                     <div className="flex items-center gap-2 mt-2 ml-1">
-                        {useLiveMode ? (
-                            <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${wsConnected ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500'}`}>
-                                <Wifi className={`w-3 h-3 ${wsConnected ? 'animate-pulse' : ''}`} />
-                                {wsConnected ? 'Live Market Active' : 'Connecting...'}
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border bg-gray-700/30 border-gray-600 text-gray-400">
-                                <Server className="w-3 h-3" />
-                                Simulation Mode
-                            </div>
-                        )}
-                        {useLiveMode && wsConnected && (
+                        <div className={`flex items-center gap-2 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${wsConnected ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500'}`}>
+                            <Wifi className={`w-3 h-3 ${wsConnected ? 'animate-pulse' : ''}`} />
+                            {wsConnected ? 'Live Market Active' : wsConnecting ? 'Connecting...' : 'Connecting...'}
+                        </div>
+                        {wsConnected && (
                             <span className="text-[10px] text-gray-500 font-mono">
                                 {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : ''}
                             </span>
@@ -697,25 +708,8 @@ const Header = ({
                     <ExportButton stocks={stocks} type="scan" />
                 </div>
 
-                {/* GROUP 3: SYSTEM & PRIMARY ACTION */}
+                {/* GROUP 3: PRIMARY ACTION */}
                 <div className="flex items-center gap-3 pl-2">
-                    <div className="flex items-center bg-gray-900/50 rounded-lg p-1 border border-gray-700/50">
-                        <button
-                            onClick={() => setUseLiveMode(false)}
-                            className={`p-1.5 rounded-md transition-all ${!useLiveMode ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
-                            title="Simulation Mode"
-                        >
-                            <Server className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setUseLiveMode(true)}
-                            className={`p-1.5 rounded-md transition-all ${useLiveMode ? 'bg-red-500/20 text-red-400 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
-                            title="Live Mode"
-                        >
-                            <Wifi className="w-4 h-4" />
-                        </button>
-                    </div>
-
                     <button
                         onClick={() => setShowHalalOnly(!showHalalOnly)}
                         className={`p-2 rounded-lg transition-all border ${showHalalOnly
@@ -729,10 +723,7 @@ const Header = ({
                     <button
                         onClick={handleScan}
                         disabled={isScanning}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${useLiveMode
-                            ? 'bg-gradient-to-r from-red-600 to-rose-600 shadow-red-900/20'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-900/20'
-                            }`}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-900/20"
                     >
                         {isScanning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                         <span>{isScanning ? 'Scanning...' : 'Scan Market'}</span>
@@ -760,7 +751,7 @@ const ErrorBanner = ({ message }) => (
 /**
  * Stats Cards
  */
-const StatsCards = ({ stocks, useLiveMode, priceUpdates }) => (
+const StatsCards = ({ stocks, wsConnected, priceUpdates }) => (
     <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <StatCard
             label="Total Scanned"
@@ -785,7 +776,7 @@ const StatsCards = ({ stocks, useLiveMode, priceUpdates }) => (
             color="yellow"
             icon={<Target className="w-4 h-4" />}
         />
-        {useLiveMode && (
+        {wsConnected && (
             <div className="stat-card card-hover group">
                 <p className="text-gray-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-1">
                     <Zap className="w-3 h-3 text-yellow-400 animate-pulse" /> Live Updates

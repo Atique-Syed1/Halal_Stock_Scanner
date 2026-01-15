@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Command, ArrowRight, LayoutDashboard, ScanLine, Briefcase, Bell, Settings, Moon, Sun, X } from 'lucide-react';
+import { Search, Command, ArrowRight, LayoutDashboard, ScanLine, Briefcase, Bell, Settings, Moon, Sun, X, Globe } from 'lucide-react';
 import { useEscapeKey } from '../../hooks/useKeyboardShortcuts';
 
 /**
  * Command Palette / Quick Search Component
  * Activated with Ctrl+K
  */
-export const CommandPalette = ({ 
-    isOpen, 
-    onClose, 
+export const CommandPalette = ({
+    isOpen,
+    onClose,
     stocks = [],
     onSelectStock,
     onNavigate,
@@ -34,6 +34,7 @@ export const CommandPalette = ({
     // Command definitions
     const commands = useMemo(() => [
         { id: 'dashboard', label: 'Go to Dashboard', icon: LayoutDashboard, action: () => onNavigate?.('dashboard'), category: 'Navigation' },
+        { id: 'market', label: 'Go to Market Overview', icon: Globe, action: () => onNavigate?.('market'), category: 'Navigation' },
         { id: 'scanner', label: 'Go to Scanner', icon: ScanLine, action: () => onNavigate?.('scanner'), category: 'Navigation' },
         { id: 'portfolio', label: 'Open Portfolio', icon: Briefcase, action: () => onNavigate?.('portfolio'), category: 'Navigation' },
         { id: 'alerts', label: 'Open Alerts', icon: Bell, action: () => onNavigate?.('alerts'), category: 'Navigation' },
@@ -45,8 +46,8 @@ export const CommandPalette = ({
         if (!query || query.length < 1) return [];
         const q = query.toLowerCase();
         return stocks
-            .filter(s => 
-                s.symbol.toLowerCase().includes(q) || 
+            .filter(s =>
+                s.symbol.toLowerCase().includes(q) ||
                 s.name?.toLowerCase().includes(q)
             )
             .slice(0, 5);
@@ -103,7 +104,7 @@ export const CommandPalette = ({
     return (
         <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh]">
             {/* Backdrop */}
-            <div 
+            <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
@@ -150,7 +151,7 @@ export const CommandPalette = ({
                                         {categoryResults.map((result, idx) => {
                                             const globalIndex = results.indexOf(result);
                                             const Icon = result.icon;
-                                            
+
                                             return (
                                                 <button
                                                     key={result.id}
@@ -158,11 +159,10 @@ export const CommandPalette = ({
                                                         result.action();
                                                         onClose();
                                                     }}
-                                                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                                                        globalIndex === selectedIndex
+                                                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${globalIndex === selectedIndex
                                                             ? 'bg-emerald-500/20 text-white'
                                                             : 'text-gray-300 hover:bg-gray-800'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {Icon ? (
                                                         <Icon className="w-5 h-5 text-gray-400" />
@@ -177,9 +177,8 @@ export const CommandPalette = ({
                                                             <div className="text-xs text-gray-500 truncate">{result.sublabel}</div>
                                                         )}
                                                     </div>
-                                                    <ArrowRight className={`w-4 h-4 transition-opacity ${
-                                                        globalIndex === selectedIndex ? 'opacity-100' : 'opacity-0'
-                                                    }`} />
+                                                    <ArrowRight className={`w-4 h-4 transition-opacity ${globalIndex === selectedIndex ? 'opacity-100' : 'opacity-0'
+                                                        }`} />
                                                 </button>
                                             );
                                         })}

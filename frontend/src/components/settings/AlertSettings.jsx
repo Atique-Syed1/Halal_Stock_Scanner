@@ -5,7 +5,7 @@ import API from '../../config/api';
 export const AlertSettings = ({ isOpen, onClose }) => {
     const [alerts, setAlerts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [newAlert, setNewAlert] = useState({ symbol: '', condition: 'ABOVE', price: '' });
+    const [newAlert, setNewAlert] = useState({ symbol: '', condition: 'ABOVE', price: '', metric: 'PRICE' });
     const [availableSymbols, setAvailableSymbols] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'triggered'
@@ -58,12 +58,13 @@ export const AlertSettings = ({ isOpen, onClose }) => {
                 body: JSON.stringify({
                     symbol: newAlert.symbol.toUpperCase(),
                     condition: newAlert.condition,
-                    price: parseFloat(newAlert.price)
+                    price: parseFloat(newAlert.price),
+                    metric: newAlert.metric
                 })
             });
 
             if (response.ok) {
-                setNewAlert({ symbol: '', condition: 'ABOVE', price: '' });
+                setNewAlert({ symbol: '', condition: 'ABOVE', price: '', metric: 'PRICE' });
                 fetchAlerts();
             } else {
                 const data = await response.json();
@@ -157,13 +158,26 @@ export const AlertSettings = ({ isOpen, onClose }) => {
                                         <option value="BELOW">BELOW (≤)</option>
                                     </select>
                                 </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Type</label>
+                                    <select
+                                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-2 py-2 text-white text-sm focus:border-yellow-500 outline-none transition-colors"
+                                        value={newAlert.metric}
+                                        onChange={e => setNewAlert({ ...newAlert, metric: e.target.value })}
+                                    >
+                                        <option value="PRICE">PRICE</option>
+                                        <option value="RSI">RSI</option>
+                                    </select>
+                                </div>
                             </div>
                             <div className="flex gap-3">
                                 <div className="flex-1">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Target Price (₹)</label>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
+                                        Target {newAlert.metric === 'PRICE' ? 'Price (₹)' : 'Value'}
+                                    </label>
                                     <input
                                         type="number"
-                                        step="0.05"
+                                        step={newAlert.metric === 'PRICE' ? "0.05" : "1"}
                                         placeholder="0.00"
                                         className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-yellow-500 outline-none transition-colors"
                                         value={newAlert.price}
@@ -208,7 +222,10 @@ export const AlertSettings = ({ isOpen, onClose }) => {
                                                         {alert.condition}
                                                     </span>
                                                 </div>
-                                                <div className="text-xl font-bold text-yellow-500">₹{alert.target_price || alert.price}</div>
+                                                <div className="text-xl font-bold text-yellow-500">
+                                                    {alert.metric === 'PRICE' ? '₹' : ''}{alert.target_price || alert.price}
+                                                    {alert.metric === 'RSI' && <span className="text-xs ml-1 text-gray-500">RSI</span>}
+                                                </div>
                                                 {!alert.active && alert.triggered_at && (
                                                     <div className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
                                                         <CheckCircle className="w-3 h-3" />

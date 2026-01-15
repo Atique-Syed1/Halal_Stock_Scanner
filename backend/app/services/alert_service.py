@@ -7,12 +7,14 @@ class AlertCreate(BaseModel):
     symbol: str
     condition: str  # ABOVE or BELOW
     price: float
+    metric: str = "PRICE"  # PRICE, RSI
 
 def add_alert(alert: AlertCreate, session: Session) -> DBAlert:
     db_alert = DBAlert(
         symbol=alert.symbol,
         condition=alert.condition,
         target_price=alert.price,
+        metric=alert.metric,
         active=True
     )
     session.add(db_alert)
@@ -37,19 +39,35 @@ def check_alerts(current_prices: Dict[str, float], session: Session) -> List[DBA
     triggered = []
     
     updated = False
+    # Import cached data access for technicals
+    from .stock_service import cached_stock_data
+
+    updated = False
     for alert in alerts:
         symbol = alert.symbol
-        if symbol not in current_prices:
-            continue
-            
-        current = current_prices[symbol]
+        metric = getattr(alert, "metric", "PRICE")
+        
+        current_val = 0.0
+        
+        # Get current value based on metric
+        if metric == "PRICE":
+            if symbol not in current_prices:
+                continue
+            current_val = current_prices[symbol]
+        elif metric == "RSI":
+            # Check cache for RSI
+            stock_data = cached_stock_data.get(symbol.replace('.NS', '')) or cached_stock_data.get(symbol)
+            if not stock_data or "technicals" not in stock_data:
+                continue
+            current_val = stock_data["technicals"].get("rsi", 0)
+        
         target = alert.target_price
         condition = alert.condition
         
         is_triggered = False
-        if condition == "ABOVE" and current >= target:
+        if condition == "ABOVE" and current_val >= target:
             is_triggered = True
-        elif condition == "BELOW" and current <= target:
+        elif condition == "BELOW" and current_val <= target:
             is_triggered = True
             
         if is_triggered:

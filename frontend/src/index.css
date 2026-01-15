@@ -56,6 +56,76 @@
   --badge-haram-border: rgba(239, 68, 68, 0.25);
 }
 
+/* Ocean Theme (Deep Blue) */
+.theme-ocean {
+  --bg-primary: #0b1121;
+  /* Dark Navy */
+  --bg-secondary: #162032;
+  /* Navy */
+  --bg-tertiary: #23304a;
+  /* Lighter Navy */
+  --bg-hover: #2a3a55;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: rgba(56, 189, 248, 0.2);
+  --color-primary: #38bdf8;
+  /* Sky 400 */
+  --gradient-primary: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  --gradient-dark: linear-gradient(180deg, #0b1121 0%, #080c19 100%);
+
+  /* Status colors override */
+  --color-emerald-light: #34d399;
+  --color-red-light: #f87171;
+  --color-blue-light: rgba(56, 189, 248, 0.15);
+}
+
+/* Sunset Theme (Warm) */
+.theme-sunset {
+  --bg-primary: #180818;
+  /* Deep Plum */
+  --bg-secondary: #251025;
+  --bg-tertiary: #3a1a3a;
+  --bg-hover: #4d204d;
+  --text-primary: #fce7f3;
+  /* Pinkish White */
+  --text-secondary: #fbcfe8;
+  --text-muted: #db2777;
+  --border-color: rgba(244, 114, 182, 0.2);
+  --color-primary: #f472b6;
+  /* Pink 400 */
+  --gradient-primary: linear-gradient(135deg, #f472b6 0%, #e11d48 100%);
+  --gradient-dark: linear-gradient(180deg, #180818 0%, #100510 100%);
+
+  /* Status colors override */
+  --color-emerald-light: #4ade80;
+  --color-red-light: #fb7185;
+  --color-blue-light: rgba(244, 114, 182, 0.15);
+}
+
+/* Forest Theme (Nature) */
+.theme-forest {
+  --bg-primary: #05190f;
+  /* Deep Green */
+  --bg-secondary: #0a2617;
+  --bg-tertiary: #133a25;
+  --bg-hover: #1c4d32;
+  --text-primary: #dcfce7;
+  --text-secondary: #86efac;
+  --text-muted: #22c55e;
+  --border-color: rgba(34, 197, 94, 0.2);
+  --color-primary: #4ade80;
+  /* Green 400 */
+  --gradient-primary: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  --gradient-dark: linear-gradient(180deg, #05190f 0%, #020c07 100%);
+
+  /* Status colors override */
+  --color-emerald-light: #4ade80;
+  --color-red-light: #ef4444;
+  --color-blue-light: rgba(74, 222, 128, 0.15);
+}
+
+
 .light-mode body,
 .light-mode .bg-gray-900 {
   background: var(--gradient-dark) !important;
@@ -235,15 +305,17 @@
    LIGHT MODE - SCANNER TABLE SPECIFIC STYLES
    ==================================================================== */
 
-/* Table header in light mode */
+/* Table header in light mode - targets scanner table header row */
 .light-mode thead,
-.light-mode .backdrop-blur-md.bg-gray-900\/90 {
-  background: rgba(248, 250, 252, 0.95) !important;
-  backdrop-filter: blur(8px) !important;
+.light-mode .bg-gray-900\/90,
+.light-mode [class*="bg-gray-900/90"] {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
-.light-mode thead th {
-  color: var(--text-muted) !important;
+.light-mode thead th,
+.light-mode .bg-gray-900\/90 div {
+  color: #64748b !important;
 }
 
 /* Stock row styling */
@@ -348,6 +420,157 @@
 
 .light-mode .text-red-400 {
   color: #dc2626 !important;
+}
+
+/* ====================================================================
+   LIGHT MODE - ENHANCED SCANNER POLISH
+   ==================================================================== */
+
+/* Navigation hover - better contrast in light mode */
+.light-mode .hover\:text-white:hover {
+  color: var(--text-primary) !important;
+}
+
+.light-mode .hover\:bg-gray-700\/50:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Empty state - stronger contrast */
+.light-mode .text-gray-500,
+.light-mode .opacity-30 {
+  color: #64748b !important;
+  opacity: 0.6 !important;
+}
+
+/* Stat cards - more defined borders and shadow */
+.light-mode .stat-card {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-mode .stat-card:hover {
+  border-color: #10b981 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12) !important;
+}
+
+/* Scanner table header - softer in light mode */
+.light-mode .bg-gradient-to-r.from-gray-800\/80.to-gray-900\/80 {
+  background: linear-gradient(to right, #f8fafc, #ffffff) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Glass card scanner container */
+.light-mode .glass-card {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* "Live Market Active" badge - better contrast */
+.light-mode .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+.light-mode .border-emerald-500\/30 {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.light-mode .text-emerald-500 {
+  color: #059669 !important;
+}
+
+/* Yellow/connecting badge */
+.light-mode .bg-yellow-500\/10 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+}
+
+.light-mode .text-yellow-500 {
+  color: #d97706 !important;
+}
+
+/* Badge boost: Halal chip */
+.light-mode .border-emerald-500\/30 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Action toolbar background */
+.light-mode .bg-gray-800\/40 {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Scanner page header branding */
+.light-mode h1.bg-clip-text {
+  -webkit-text-fill-color: unset !important;
+  background: none !important;
+  color: #0f766e !important;
+}
+
+/* Scan button in light mode - keep vibrant */
+.light-mode .from-emerald-600 {
+  background: linear-gradient(to right, #059669, #14b8a6) !important;
+}
+
+/* Stock row hover */
+.light-mode .hover\:bg-gray-800\/40:hover {
+  background-color: rgba(16, 185, 129, 0.04) !important;
+}
+
+/* Selected stock row */
+.light-mode .bg-blue-900\/20 {
+  background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+.light-mode .border-l-blue-500 {
+  border-left-color: #3b82f6 !important;
+}
+
+/* ====================================================================
+   LIGHT MODE - DASHBOARD FIXES
+   ==================================================================== */
+
+/* Halal Buy Signals card - needs light background */
+.light-mode .from-emerald-900\/30,
+.light-mode .to-gray-800\/50,
+.light-mode .bg-gradient-to-br.from-emerald-900\/30 {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(240, 253, 250, 1) 100%) !important;
+}
+
+/* Dashboard stat cards */
+.light-mode .from-blue-900\/20,
+.light-mode .from-purple-900\/20,
+.light-mode .from-amber-900\/20,
+.light-mode .from-emerald-900\/20 {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Period selector buttons (1W, 1M, 3M, 6M, 1Y) */
+.light-mode .bg-blue-500 {
+  background-color: #3b82f6 !important;
+}
+
+.light-mode .bg-gray-700 {
+  background-color: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+.light-mode .bg-gray-700:hover {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+/* Chart container in dashboard */
+.light-mode .bg-gray-900\/50 {
+  background-color: #f8fafc !important;
+}
+
+/* Top Gainers/Losers cards */
+.light-mode .from-emerald-950,
+.light-mode .from-red-950 {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
 /* Base Styles */

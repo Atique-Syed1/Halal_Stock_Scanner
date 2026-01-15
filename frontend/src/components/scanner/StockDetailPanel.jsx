@@ -27,7 +27,7 @@ const ChartLoadingSkeleton = () => (
 /**
  * Stock Detail Panel - Shows Shariah compliance, chart, and technical analysis
  */
-export const StockDetailPanel = ({ stock, useLiveMode, wsConnected }) => {
+export const StockDetailPanel = ({ stock, wsConnected }) => {
     const [backtestOpen, setBacktestOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('news'); // Default to News to match screenshot for first impression
     const [aiOpen, setAiOpen] = useState(false);

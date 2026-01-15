@@ -45,7 +45,7 @@ export const PWAInstallPrompt = () => {
 
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        
+
         if (outcome === 'accepted') {
             setShowInstallBanner(false);
         }
@@ -62,7 +62,7 @@ export const PWAInstallPrompt = () => {
                         <Smartphone className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div className="flex-1">
-                        <h3 className="font-bold text-white">Install HalalTrade Pro</h3>
+                        <h3 className="font-bold text-white">Install Stock Scanner</h3>
                         <p className="text-sm text-gray-400 mt-1">
                             Add to home screen for quick access & offline support
                         </p>
@@ -117,7 +117,7 @@ export const NotificationToggle = ({ className = '' }) => {
 
             if (result === 'granted') {
                 // Show test notification
-                new Notification('HalalTrade Pro', {
+                new Notification('Stock Scanner', {
                     body: 'Notifications enabled! You\'ll receive price alerts here.',
                     icon: '/halaltrade-icon.svg'
                 });
@@ -136,13 +136,12 @@ export const NotificationToggle = ({ className = '' }) => {
         <button
             onClick={requestPermission}
             disabled={loading || isDenied}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                isGranted
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : isDenied
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isGranted
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : isDenied
                     ? 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
                     : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700 border border-gray-600'
-            } ${className}`}
+                } ${className}`}
             title={isDenied ? 'Notifications blocked - enable in browser settings' : ''}
         >
             {isGranted ? (

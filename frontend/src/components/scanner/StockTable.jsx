@@ -16,7 +16,6 @@ export const StockTable = ({
     selectedStock,
     onSelectStock,
     previousPrices,
-    useLiveMode,
     wsConnected,
     isInWatchlist,
     onToggleWatchlist
@@ -62,13 +61,13 @@ export const StockTable = ({
             {/* Header */}
             <div className="p-4 border-b border-gray-700/50 flex justify-between items-center bg-gradient-to-r from-gray-800/80 to-gray-900/80">
                 <h2 className="font-bold text-lg flex items-center gap-2 text-white">
-                    {useLiveMode && wsConnected && (
+                    {wsConnected && (
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse-glow shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                     )}
                     Market Scanner
                 </h2>
                 <div className="flex items-center gap-3">
-                    {useLiveMode && wsConnected && (
+                    {wsConnected && (
                         <span className="text-xs font-medium text-emerald-400 bg-emerald-950/40 px-3 py-1.5 rounded-full flex items-center gap-2 border border-emerald-900/50">
                             <Wifi className="w-3 h-3 animate-pulse" /> Streaming
                         </span>
@@ -87,10 +86,10 @@ export const StockTable = ({
                             <Radio className="w-8 h-8 opacity-30" />
                         </div>
                         <p className="text-gray-400 font-medium">
-                            {useLiveMode ? 'Ready to Scan' : 'No Data'}
+                            Ready to Scan
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
-                            {useLiveMode ? 'Ensure backend is running' : 'Click Scan to begin'}
+                            Click Scan to begin
                         </p>
                     </div>
                 ) : (
@@ -211,7 +210,7 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
         {/* RSI */}
         <div className="w-16 px-3 text-center">
             <span className={`font-mono font-bold text-sm ${stock.technicals?.rsi < 30 ? 'text-emerald-400' :
-                    stock.technicals?.rsi > 70 ? 'text-red-400' : 'text-gray-400'
+                stock.technicals?.rsi > 70 ? 'text-red-400' : 'text-gray-400'
                 }`}>
                 {stock.technicals?.rsi || '-'}
             </span>
@@ -229,8 +228,8 @@ const StockRow = memo(({ stock, isSelected, onSelect, isWatched, onToggleWatchli
  */
 const ShariahBadge = memo(({ status }) => (
     <span className={`px-2 py-1 rounded-lg text-[10px] font-bold flex w-fit items-center gap-1 border transition-all ${status === 'Halal' ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
-            status === 'Non-Halal' ? 'bg-red-500/5 text-red-400 border-red-500/30' :
-                'bg-yellow-500/5 text-yellow-400 border-yellow-500/30'
+        status === 'Non-Halal' ? 'bg-red-500/5 text-red-400 border-red-500/30' :
+            'bg-yellow-500/5 text-yellow-400 border-yellow-500/30'
         }`}>
         {status === 'Halal' ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
         {status?.toUpperCase()}

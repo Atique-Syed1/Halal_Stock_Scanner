@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from .config import API_HOST, API_PORT, CORS_ORIGINS, WS_UPDATE_INTERVAL
 from .services.stock_service import load_csv_stocks, fetch_live_prices
 from .services.performance_service import performance_tracker
-from .routers import scan, stocks, backtest, telegram, portfolio, alerts, news, ai, watchlist, dashboard
+from .routers import scan, stocks, backtest, telegram, portfolio, alerts, news, ai, watchlist, dashboard, market, ipo, analytics
 from .database import create_db_and_tables
 from .middleware import RateLimitMiddleware
 
@@ -84,10 +84,25 @@ async def price_updater():
                             print(f"🔔 ALERT TRIGGERED: {alert.symbol} {alert.condition} {alert.target_price}")
                             # Send telegram notification
                             try:
-                                msg = (f"🔔 *PRICE ALERT*\n\n"
+                                metric = getattr(alert, "metric", "PRICE")
+                                
+                                if metric == "RSI":
+                                    from .services.stock_service import cached_stock_data
+                                    stock_data = cached_stock_data.get(alert.symbol.replace('.NS', '')) or cached_stock_data.get(alert.symbol)
+                                    current_val = stock_data["technicals"].get("rsi", 0) if stock_data else 0
+                                    target_display = f"{alert.target_price}"
+                                    current_display = f"{current_val}"
+                                    title = "RSI ALERT"
+                                else:
+                                    current_val = prices.get(alert.symbol, 0)
+                                    target_display = f"₹{alert.target_price}"
+                                    current_display = f"₹{current_val}"
+                                    title = "PRICE ALERT"
+
+                                msg = (f"🔔 *{title}*\n\n"
                                        f"*{alert.symbol}* is {alert.condition}\n"
-                                       f"Target: ₹{alert.target_price}\n"
-                                       f"Current: ₹{prices.get(alert.symbol, 0)}")
+                                       f"Target: {target_display}\n"
+                                       f"Current: {current_display}")
                                 await telegram_service.send_telegram_alert(msg)
                             except Exception as tg_err:
                                 print(f"[Alert] Telegram failed: {tg_err}")
@@ -117,19 +132,28 @@ async def lifespan(app: FastAPI):
     print("🕌 HalalTrade Pro API Starting...")
     print("=" * 60)
     
-    # Create DB tables
-    create_db_and_tables()
-    
-    # Load CSV stocks
-    load_csv_stocks()
-    
-    # Start background price updater
-    updater_task = asyncio.create_task(price_updater())
-    
-    print(f"✅ Server ready at http://{API_HOST}:{API_PORT}")
-    print("=" * 60)
-    
-    yield
+    try:
+        # Create DB tables
+        create_db_and_tables()
+        
+        # Load CSV stocks
+        load_csv_stocks()
+        
+        # Start background price updater
+        updater_task = asyncio.create_task(price_updater())
+        
+        print(f"✅ Server ready at http://{API_HOST}:{API_PORT}")
+        print("=" * 60)
+        
+        yield
+    except Exception as e:
+        print(f"❌ CRITICAL ERROR DURING STARTUP: {e}")
+        import traceback
+        traceback.print_exc()
+        raise e
+    finally:
+        if 'updater_task' in locals() and not updater_task.done():
+            updater_task.cancel()
     
     # Shutdown
     updater_task.cancel()
@@ -223,6 +247,9 @@ app.include_router(news.router)
 app.include_router(ai.router)
 app.include_router(watchlist.router)
 app.include_router(dashboard.router)
+app.include_router(market.router)
+app.include_router(ipo.router)
+app.include_router(analytics.router)
 
 
 # ====================================================================
@@ -330,4 +357,13 @@ async def websocket_prices(websocket: WebSocket):
 # ====================================================================
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=API_HOST, port=API_PORT)
+    import sys
+    try:
+        print(f"🚀 Attempting to start server on {API_HOST}:{API_PORT}...")
+        uvicorn.run(app, host=API_HOST, port=API_PORT, log_level="info")
+    except Exception as e:
+        print(f"❌ FAILED TO START SERVER: {e}")
+        if "10048" in str(e):
+            print(f"⚠️ PORT {API_PORT} IS ALREADY IN USE!")
+            print("Please kill the existing process or change API_PORT in config.py")
+        sys.exit(1)

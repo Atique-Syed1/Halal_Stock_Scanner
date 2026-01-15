@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, ScanLine, Briefcase, Bell, Search } from 'lucide-react';
+import { LayoutDashboard, ScanLine, Briefcase, Bell, Search, Globe } from 'lucide-react';
 
 /**
  * Mobile Bottom Navigation Bar
@@ -14,8 +14,8 @@ export const MobileBottomNav = ({
 }) => {
     const navItems = [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Home', action: () => onTabChange('dashboard') },
+        { id: 'market', icon: Globe, label: 'Market', action: () => onTabChange('market') },
         { id: 'scanner', icon: ScanLine, label: 'Scanner', action: () => onTabChange('scanner') },
-        { id: 'search', icon: Search, label: 'Search', action: onOpenSearch },
         { id: 'portfolio', icon: Briefcase, label: 'Portfolio', action: onOpenPortfolio },
         { id: 'alerts', icon: Bell, label: 'Alerts', action: onOpenAlerts },
     ];
@@ -33,8 +33,8 @@ export const MobileBottomNav = ({
                             key={id}
                             onClick={action}
                             className={`flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all ${isActive
-                                    ? 'text-emerald-400'
-                                    : 'text-gray-500 hover:text-gray-300'
+                                ? 'text-emerald-400'
+                                : 'text-gray-500 hover:text-gray-300'
                                 }`}
                         >
                             <div className={`p-1.5 rounded-lg transition-all ${isActive ? 'bg-emerald-500/20' : ''

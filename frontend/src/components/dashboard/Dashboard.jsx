@@ -7,7 +7,6 @@ import {
     Bell,
     Star,
     Activity,
-    Clock,
     BarChart2,
     RefreshCw,
     ShieldCheck,
@@ -26,7 +25,8 @@ import RiskMetricsWidget from './RiskMetricsWidget';
  * STAT CARD COMPONENT
  * ====================================================================
  */
-const StatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, color = "emerald" }) => {
+const StatCard = ({ title, value, subtitle, icon, trend, trendValue, color = "emerald" }) => {
+    const Icon = icon;
     const colorClasses = {
         emerald: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30",
         blue: "from-blue-500/20 to-blue-600/10 border-blue-500/30",
@@ -491,4 +491,3 @@ const Dashboard = ({ onNavigateToScanner }) => {
 };
 
 export default Dashboard;
-export { Dashboard };

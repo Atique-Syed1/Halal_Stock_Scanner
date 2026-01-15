@@ -23,7 +23,7 @@ export const StockListSettings = ({ isOpen, onClose, onListChange }) => {
             const response = await fetch(API.STOCKS_LIST);
             const data = await response.json();
             setListInfo(data);
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to fetch stock list info' });
         }
     };
@@ -53,7 +53,7 @@ export const StockListSettings = ({ isOpen, onClose, onListChange }) => {
             } else {
                 setMessage({ type: 'error', text: result.error });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to upload file' });
         } finally {
             setIsUploading(false);
@@ -81,7 +81,7 @@ export const StockListSettings = ({ isOpen, onClose, onListChange }) => {
             } else {
                 setMessage({ type: 'error', text: result.error });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to reset' });
         } finally {
             setIsLoading(false);
@@ -219,7 +219,7 @@ export const StockListSettings = ({ isOpen, onClose, onListChange }) => {
 /**
  * Stock List Button for Header
  */
-export const StockListButton = ({ onClick, listName, count }) => (
+export const StockListButton = ({ onClick, count }) => (
     <button
         onClick={onClick}
         className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700"

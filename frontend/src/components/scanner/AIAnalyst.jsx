@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, X, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Bot, X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import API from '../../config/api';
 import ReactMarkdown from 'react-markdown'; // Assuming react-markdown is not installed, I'll use simple rendering
 
@@ -8,23 +8,23 @@ export const AIAnalystModal = ({ isOpen, onClose, stock }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchAnalysis = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(API.AI_ANALYZE(stock.symbol));
+                const data = await res.json();
+                setAnalysis(data);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (isOpen && stock) {
             fetchAnalysis();
         }
     }, [isOpen, stock]);
-
-    const fetchAnalysis = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(API.AI_ANALYZE(stock.symbol));
-            const data = await res.json();
-            setAnalysis(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     if (!isOpen) return null;
 

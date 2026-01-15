@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { AlertTriangle, Activity, Radio, BarChart2, Newspaper, Bot, Loader } from 'lucide-react';
+import { AlertTriangle, Activity, BarChart2, Newspaper, Bot, Loader } from 'lucide-react';
 import { MAX_DEBT_RATIO, MAX_CASH_RATIO } from '../../data/stockData';
 import { BacktestModal, BacktestButton } from '../backtest/Backtest';
 import { NewsPanel } from './NewsPanel';
@@ -27,7 +27,7 @@ const ChartLoadingSkeleton = () => (
 /**
  * Stock Detail Panel - Shows Shariah compliance, chart, and technical analysis
  */
-export const StockDetailPanel = ({ stock, wsConnected }) => {
+export const StockDetailPanel = ({ stock }) => {
     const [backtestOpen, setBacktestOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('news'); // Default to News to match screenshot for first impression
     const [aiOpen, setAiOpen] = useState(false);

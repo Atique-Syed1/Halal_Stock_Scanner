@@ -1,5 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, TrendingUp, ShieldCheck, ShieldAlert, Clock, AlertCircle, Loader, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calendar, ShieldCheck, ShieldAlert, Clock, AlertCircle, Loader } from 'lucide-react';
+
+const getMockIpos = () => [
+    {
+        id: 1,
+        company: 'TechVentures India Ltd',
+        symbol: 'TECHVENT',
+        priceRange: '₹450 - ₹475',
+        issueSize: '₹1,200 Cr',
+        openDate: '2026-01-20',
+        closeDate: '2026-01-22',
+        listingDate: '2026-01-27',
+        status: 'upcoming',
+        isHalal: true,
+        sector: 'Technology',
+        lotSize: 31,
+        subscriptionTimes: null,
+        halalReason: 'Software services, no prohibited activities'
+    },
+    {
+        id: 2,
+        company: 'Green Energy Solutions',
+        symbol: 'GREENSOL',
+        priceRange: '₹280 - ₹295',
+        issueSize: '₹850 Cr',
+        openDate: '2026-01-18',
+        closeDate: '2026-01-21',
+        listingDate: '2026-01-26',
+        status: 'live',
+        isHalal: true,
+        sector: 'Energy',
+        lotSize: 50,
+        subscriptionTimes: 2.4,
+        halalReason: 'Renewable energy, Shariah compliant'
+    },
+    {
+        id: 3,
+        company: 'Premium Spirits Ltd',
+        symbol: 'PREMSPIR',
+        priceRange: '₹520 - ₹545',
+        issueSize: '₹2,100 Cr',
+        openDate: '2026-01-19',
+        closeDate: '2026-01-22',
+        listingDate: '2026-01-27',
+        status: 'live',
+        isHalal: false,
+        sector: 'FMCG',
+        lotSize: 27,
+        subscriptionTimes: 5.8,
+        halalReason: 'Alcohol manufacturing - prohibited'
+    },
+    {
+        id: 4,
+        company: 'HealthCare Plus',
+        symbol: 'HCPLUS',
+        priceRange: '₹180 - ₹195',
+        issueSize: '₹650 Cr',
+        openDate: '2026-01-25',
+        closeDate: '2026-01-28',
+        listingDate: '2026-02-02',
+        status: 'upcoming',
+        isHalal: true,
+        sector: 'Healthcare',
+        lotSize: 76,
+        subscriptionTimes: null,
+        halalReason: 'Healthcare services, ethical business'
+    },
+    {
+        id: 5,
+        company: 'FinServe Capital',
+        symbol: 'FINCAP',
+        priceRange: '₹320 - ₹340',
+        issueSize: '₹1,800 Cr',
+        openDate: '2026-01-22',
+        closeDate: '2026-01-24',
+        listingDate: '2026-01-29',
+        status: 'upcoming',
+        isHalal: false,
+        sector: 'Finance',
+        lotSize: 44,
+        subscriptionTimes: null,
+        halalReason: 'Interest-based lending - prohibited'
+    }
+];
 
 /**
  * IPO Tracker Component
@@ -8,113 +91,27 @@ import { Calendar, TrendingUp, ShieldCheck, ShieldAlert, Clock, AlertCircle, Loa
 const IpoTracker = () => {
     const [ipos, setIpos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [filter, setFilter] = useState('all'); // all, halal, upcoming, live
 
-    useEffect(() => {
-        fetchIpos();
-    }, []);
-
-    const fetchIpos = async () => {
+    const fetchIpos = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/ipo/upcoming');
             if (!res.ok) throw new Error('Failed to fetch IPOs');
             const data = await res.json();
             setIpos(data.ipos || []);
-            setError(null);
         } catch (err) {
             console.error('IPO fetch error:', err);
             // Use mock data as fallback
             setIpos(getMockIpos());
-            setError(null);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const getMockIpos = () => [
-        {
-            id: 1,
-            company: 'TechVentures India Ltd',
-            symbol: 'TECHVENT',
-            priceRange: '₹450 - ₹475',
-            issueSize: '₹1,200 Cr',
-            openDate: '2026-01-20',
-            closeDate: '2026-01-22',
-            listingDate: '2026-01-27',
-            status: 'upcoming',
-            isHalal: true,
-            sector: 'Technology',
-            lotSize: 31,
-            subscriptionTimes: null,
-            halalReason: 'Software services, no prohibited activities'
-        },
-        {
-            id: 2,
-            company: 'Green Energy Solutions',
-            symbol: 'GREENSOL',
-            priceRange: '₹280 - ₹295',
-            issueSize: '₹850 Cr',
-            openDate: '2026-01-18',
-            closeDate: '2026-01-21',
-            listingDate: '2026-01-26',
-            status: 'live',
-            isHalal: true,
-            sector: 'Energy',
-            lotSize: 50,
-            subscriptionTimes: 2.4,
-            halalReason: 'Renewable energy, Shariah compliant'
-        },
-        {
-            id: 3,
-            company: 'Premium Spirits Ltd',
-            symbol: 'PREMSPIR',
-            priceRange: '₹520 - ₹545',
-            issueSize: '₹2,100 Cr',
-            openDate: '2026-01-19',
-            closeDate: '2026-01-22',
-            listingDate: '2026-01-27',
-            status: 'live',
-            isHalal: false,
-            sector: 'FMCG',
-            lotSize: 27,
-            subscriptionTimes: 5.8,
-            halalReason: 'Alcohol manufacturing - prohibited'
-        },
-        {
-            id: 4,
-            company: 'HealthCare Plus',
-            symbol: 'HCPLUS',
-            priceRange: '₹180 - ₹195',
-            issueSize: '₹650 Cr',
-            openDate: '2026-01-25',
-            closeDate: '2026-01-28',
-            listingDate: '2026-02-02',
-            status: 'upcoming',
-            isHalal: true,
-            sector: 'Healthcare',
-            lotSize: 76,
-            subscriptionTimes: null,
-            halalReason: 'Healthcare services, ethical business'
-        },
-        {
-            id: 5,
-            company: 'FinServe Capital',
-            symbol: 'FINCAP',
-            priceRange: '₹320 - ₹340',
-            issueSize: '₹1,800 Cr',
-            openDate: '2026-01-22',
-            closeDate: '2026-01-24',
-            listingDate: '2026-01-29',
-            status: 'upcoming',
-            isHalal: false,
-            sector: 'Finance',
-            lotSize: 44,
-            subscriptionTimes: null,
-            halalReason: 'Interest-based lending - prohibited'
-        }
-    ];
+    useEffect(() => {
+        fetchIpos();
+    }, [fetchIpos]);
 
     const filteredIpos = ipos.filter(ipo => {
         if (filter === 'halal') return ipo.isHalal;
@@ -187,8 +184,8 @@ const IpoTracker = () => {
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filter === f
-                                        ? 'bg-emerald-500/20 text-emerald-400'
-                                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
                                     }`}
                             >
                                 {f === 'halal' ? '🕌 Halal' : f.charAt(0).toUpperCase() + f.slice(1)}

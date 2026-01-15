@@ -10,11 +10,10 @@ import ChartExport from './ChartExport';
  * Professional candlestick/line chart with indicators
  * ====================================================================
  */
-const AdvancedChart = ({ 
-    symbol, 
-    height = 400, 
+const AdvancedChart = ({
+    symbol,
+    height = 400,
     showVolume = true,
-    showIndicators = true,
     defaultPeriod = '1y'
 }) => {
     const chartContainerRef = useRef(null);
@@ -115,7 +114,7 @@ const AdvancedChart = ({
 
         // Create new chart
         const chartHeight = isFullscreen ? window.innerHeight - 180 : height;
-        
+
         const chart = createChart(chartContainerRef.current, {
             width: chartContainerRef.current.clientWidth,
             height: chartHeight,
@@ -255,11 +254,10 @@ const AdvancedChart = ({
                             <button
                                 key={p.value}
                                 onClick={() => setPeriod(p.value)}
-                                className={`px-2 py-1 text-xs font-medium rounded transition-all ${
-                                    period === p.value
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'text-gray-400 hover:text-white'
-                                }`}
+                                className={`px-2 py-1 text-xs font-medium rounded transition-all ${period === p.value
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'text-gray-400 hover:text-white'
+                                    }`}
                             >
                                 {p.label}
                             </button>
@@ -300,8 +298,8 @@ const AdvancedChart = ({
                     </button>
 
                     {/* Export Chart */}
-                    <ChartExport 
-                        chartRef={chartContainerRef} 
+                    <ChartExport
+                        chartRef={chartContainerRef}
                         filename={`${symbol?.replace('.NS', '')}-chart`}
                         title={`${symbol?.replace('.NS', '')} - ${period.toUpperCase()} Chart`}
                     />
@@ -319,7 +317,7 @@ const AdvancedChart = ({
                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/80">
                         <div className="text-center">
                             <p className="text-gray-400 mb-2">{error}</p>
-                            <button 
+                            <button
                                 onClick={fetchData}
                                 className="px-3 py-1 bg-emerald-500 text-white text-sm rounded hover:bg-emerald-600"
                             >
@@ -351,4 +349,3 @@ const AdvancedChart = ({
 };
 
 export default AdvancedChart;
-export { AdvancedChart };

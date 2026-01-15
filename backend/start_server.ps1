@@ -1,8 +1,8 @@
 Write-Host "=== HALAL TRADE PRO REPAIR & START ==="
-Write-Host "1. Port 8001..."
+Write-Host "1. Port 8000..."
 
-# Kill any existing process on 8001
-$connections = Get-NetTCPConnection -LocalPort 8001 -ErrorAction SilentlyContinue
+# Kill any existing process on 8000
+$connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
 if ($connections) {
     foreach ($conn in $connections) {
         $pid_to_kill = $conn.OwningProcess
@@ -15,7 +15,7 @@ if ($connections) {
         }
     }
 } else {
-    Write-Host "   ✅ Port 8001 is available."
+    Write-Host "   ✅ Port 8000 is available."
 }
 
 Write-Host "2. Resetting Database..."
@@ -24,5 +24,5 @@ if (Test-Path "tradebot.db") {
     Write-Host "   ✅ Deleted old database."
 }
 
-Write-Host "3. Starting Backend on Port 8001..."
+Write-Host "3. Starting Backend on Port 8000..."
 python -m app.main

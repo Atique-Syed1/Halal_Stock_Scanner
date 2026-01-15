@@ -34,8 +34,8 @@ export const AlertSettings = ({ isOpen, onClose }) => {
             const response = await fetch(API.ALERTS);
             const data = await response.json();
             setAlerts(data);
-        } catch (e) {
-            console.error(e);
+        } catch {
+            console.error('Failed to fetch alerts');
         } finally {
             setIsLoading(false);
         }
@@ -70,7 +70,7 @@ export const AlertSettings = ({ isOpen, onClose }) => {
                 const data = await response.json();
                 setError(data.detail || 'Failed to save alert');
             }
-        } catch (e) {
+        } catch {
             setError('Connection failed');
         } finally {
             setIsSaving(false);
@@ -81,8 +81,8 @@ export const AlertSettings = ({ isOpen, onClose }) => {
         try {
             await fetch(API.ALERT_ITEM(id), { method: 'DELETE' });
             setAlerts(alerts.filter(a => a.id !== id));
-        } catch (e) {
-            console.error(e);
+        } catch {
+            console.error('Failed to delete alert');
         }
     };
 

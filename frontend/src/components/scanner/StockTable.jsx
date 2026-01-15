@@ -15,7 +15,6 @@ export const StockTable = ({
     stocks,
     selectedStock,
     onSelectStock,
-    previousPrices,
     wsConnected,
     isInWatchlist,
     onToggleWatchlist

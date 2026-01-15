@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Radio, RefreshCw, WifiOff } from 'lucide-react';
 
 /**
@@ -11,9 +11,18 @@ export const LivePriceCell = ({ price, previousPrice, isLive }) => {
         if (previousPrice !== undefined && previousPrice !== price) {
             const direction = price > previousPrice ? 'up' : price < previousPrice ? 'down' : '';
             if (direction) {
-                setFlashClass(direction);
-                const timer = setTimeout(() => setFlashClass(''), 1000);
-                return () => clearTimeout(timer);
+                // Wrap in setTimeout to avoid "setState during render" warning if it happens too fast
+                // or to ensure it runs in the next tick
+                const startTimer = setTimeout(() => {
+                    setFlashClass(direction);
+                }, 0);
+                
+                const clearTimer = setTimeout(() => setFlashClass(''), 1000);
+                
+                return () => {
+                    clearTimeout(startTimer);
+                    clearTimeout(clearTimer);
+                };
             }
         }
     }, [price, previousPrice]);

@@ -7,7 +7,7 @@ class ErrorBoundary extends React.Component {
         this.state = { hasError: false, error: null, errorInfo: null };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(_error) {
         return { hasError: true };
     }
 
@@ -88,6 +88,7 @@ class ErrorBoundary extends React.Component {
 /**
  * HOC to wrap components with error boundary
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const withErrorBoundary = (Component, options = {}) => {
     return function WrappedComponent(props) {
         return (

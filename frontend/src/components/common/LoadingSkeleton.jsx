@@ -141,7 +141,7 @@ export const StockDetailSkeleton = () => {
                 </div>
                 <div className="h-8 bg-emerald-700/30 rounded-full w-20"></div>
             </div>
-            
+
             {/* Price section */}
             <div className="mb-6">
                 <div className="h-10 bg-gray-700 rounded w-28 mb-2"></div>
@@ -183,7 +183,7 @@ export const ChartSkeleton = ({ height = 'h-64' }) => {
                     <div
                         key={i}
                         className="bg-gray-600/50 rounded-t w-4"
-                        style={{ height: `${Math.random() * 60 + 20}%` }}
+                        style={{ height: `${((i * 13) % 60) + 20}%` }}
                     ></div>
                 ))}
             </div>

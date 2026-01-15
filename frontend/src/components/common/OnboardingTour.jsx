@@ -5,11 +5,6 @@ import { X, ChevronLeft, ChevronRight, Check, Sparkles } from 'lucide-react';
  * Onboarding Tour Component
  * Guides first-time users through key features
  */
-const OnboardingTour = ({ onComplete }) => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
-    const [highlightedElement, setHighlightedElement] = useState(null);
-
     const STORAGE_KEY = 'stockscanner_tour_completed';
 
     const tourSteps = [
@@ -85,14 +80,14 @@ const OnboardingTour = ({ onComplete }) => {
         }
     ];
 
-    useEffect(() => {
-        // Check if tour has been completed
+const OnboardingTour = ({ onComplete }) => {
+    const [isVisible, setIsVisible] = useState(() => {
         const completed = localStorage.getItem(STORAGE_KEY);
-        if (!completed) {
-            // Small delay to let the app render first
-            setTimeout(() => setIsVisible(true), 1000);
-        }
-    }, []);
+        return !completed;
+    });
+    const [currentStep, setCurrentStep] = useState(0);
+    const [highlightedElement, setHighlightedElement] = useState(null);
+
 
     useEffect(() => {
         // Highlight the current target element
@@ -100,11 +95,12 @@ const OnboardingTour = ({ onComplete }) => {
         if (step.target) {
             const element = document.querySelector(step.target);
             if (element) {
-                setHighlightedElement(element);
+                // Wrap in setTimeout to avoid synchronous state update during render
+                setTimeout(() => setHighlightedElement(element), 0);
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         } else {
-            setHighlightedElement(null);
+            setTimeout(() => setHighlightedElement(null), 0);
         }
     }, [currentStep]);
 
@@ -207,10 +203,10 @@ const OnboardingTour = ({ onComplete }) => {
                                 key={index}
                                 onClick={() => setCurrentStep(index)}
                                 className={`w-2 h-2 rounded-full transition-all ${index === currentStep
-                                        ? 'bg-emerald-500 w-6'
-                                        : index < currentStep
-                                            ? 'bg-emerald-500/50'
-                                            : 'bg-gray-600'
+                                    ? 'bg-emerald-500 w-6'
+                                    : index < currentStep
+                                        ? 'bg-emerald-500/50'
+                                        : 'bg-gray-600'
                                     }`}
                             />
                         ))}
@@ -311,6 +307,7 @@ const getTooltipPosition = (element, position) => {
 };
 
 // Export utility to manually trigger tour
+// eslint-disable-next-line react-refresh/only-export-components
 export const restartOnboardingTour = () => {
     localStorage.removeItem('stockscanner_tour_completed');
     window.location.reload();

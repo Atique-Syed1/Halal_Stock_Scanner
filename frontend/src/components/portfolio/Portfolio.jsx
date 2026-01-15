@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Briefcase, Plus, TrendingUp, TrendingDown, DollarSign, PieChart, X, Loader, BarChart3, Calendar } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { AddHoldingModal } from './AddHolding';
@@ -14,7 +14,7 @@ export const Portfolio = ({ isOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isAddOpen, setIsAddOpen] = useState(false);
 
-    const fetchPortfolio = async () => {
+    const fetchPortfolio = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await fetch(API.PORTFOLIO);
@@ -25,9 +25,9 @@ export const Portfolio = ({ isOpen, onClose }) => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await fetch(API.PORTFOLIO_TRANSACTIONS);
@@ -38,7 +38,7 @@ export const Portfolio = ({ isOpen, onClose }) => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
     const handleDeleteTransaction = async (id) => {
         if (!window.confirm('Are you sure you want to delete this transaction? This cannot be undone.')) return;
@@ -105,7 +105,7 @@ export const Portfolio = ({ isOpen, onClose }) => {
             fetchPortfolio();
             if (activeTab === 'history') fetchTransactions();
         }
-    }, [isOpen, activeTab]);
+    }, [isOpen, activeTab, fetchPortfolio, fetchTransactions]);
 
     if (!isOpen) return null;
 
@@ -444,7 +444,7 @@ const HistoryTab = ({ transactions, onDelete }) => (
 /**
  * Stat Card Component
  */
-const StatCard = ({ label, value, subValue, icon: Icon, color }) => {
+const StatCard = ({ label, value, subValue, icon: IconComponent, color }) => {
     const colorClasses = {
         blue: "text-blue-400 bg-blue-900/20 border-blue-800",
         purple: "text-purple-400 bg-purple-900/20 border-purple-800",
@@ -456,7 +456,7 @@ const StatCard = ({ label, value, subValue, icon: Icon, color }) => {
         <div className={`p-3 rounded-xl border ${colorClasses[color]}`}>
             <div className="flex justify-between items-start mb-1">
                 <span className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</span>
-                <Icon className="w-3 h-3 opacity-70" />
+                <IconComponent className="w-3 h-3 opacity-70" />
             </div>
             <div className="text-lg font-bold">{value}</div>
             {subValue && <div className="text-xs font-medium opacity-80">{subValue}</div>}

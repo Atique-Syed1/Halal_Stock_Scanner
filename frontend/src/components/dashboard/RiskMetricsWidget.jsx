@@ -21,7 +21,7 @@ const RiskMetricsWidget = () => {
                         beta: 0
                     });
                 }
-            } catch (err) {
+            } catch {
                 setData({ sharpeRatio: 0, maxDrawdown: 0, volatility: 0, beta: 0 });
             } finally {
                 setLoading(false);

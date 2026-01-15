@@ -25,9 +25,11 @@ export const CommandPalette = ({
     // Focus input when opened
     useEffect(() => {
         if (isOpen) {
-            setQuery('');
-            setSelectedIndex(0);
-            setTimeout(() => inputRef.current?.focus(), 0);
+            // Focus input slightly after render to ensure it's visible
+            setTimeout(() => inputRef.current?.focus(), 10);
+            
+            // Note: We don't reset query here to avoid "setState during render" issues.
+            // Instead, we handle resets on close or when query changes.
         }
     }, [isOpen]);
 
@@ -87,17 +89,30 @@ export const CommandPalette = ({
             case 'Enter':
                 e.preventDefault();
                 if (results[selectedIndex]) {
-                    results[selectedIndex].action();
-                    onClose();
+                    handleAction(results[selectedIndex]);
                 }
                 break;
         }
     };
 
-    // Reset selection when results change
-    useEffect(() => {
+    const handleAction = (result) => {
+        result.action();
+        handleClose();
+    };
+
+    const handleClose = () => {
+        onClose();
+        // Reset state after a delay to ensure the modal closes first
+        setTimeout(() => {
+            setQuery('');
+            setSelectedIndex(0);
+        }, 300);
+    };
+
+    const handleQueryChange = (e) => {
+        setQuery(e.target.value);
         setSelectedIndex(0);
-    }, [query]);
+    };
 
     if (!isOpen) return null;
 
@@ -106,7 +121,7 @@ export const CommandPalette = ({
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={handleClose}
             />
 
             {/* Palette */}
@@ -118,7 +133,7 @@ export const CommandPalette = ({
                         ref={inputRef}
                         type="text"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={handleQueryChange}
                         onKeyDown={handleKeyDown}
                         placeholder="Search stocks, commands..."
                         className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-lg"
@@ -148,20 +163,17 @@ export const CommandPalette = ({
                                         <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             {category}
                                         </div>
-                                        {categoryResults.map((result, idx) => {
+                                        {categoryResults.map((result) => {
                                             const globalIndex = results.indexOf(result);
                                             const Icon = result.icon;
 
                                             return (
                                                 <button
                                                     key={result.id}
-                                                    onClick={() => {
-                                                        result.action();
-                                                        onClose();
-                                                    }}
+                                                    onClick={() => handleAction(result)}
                                                     className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${globalIndex === selectedIndex
-                                                            ? 'bg-emerald-500/20 text-white'
-                                                            : 'text-gray-300 hover:bg-gray-800'
+                                                        ? 'bg-emerald-500/20 text-white'
+                                                        : 'text-gray-300 hover:bg-gray-800'
                                                         }`}
                                                 >
                                                     {Icon ? (

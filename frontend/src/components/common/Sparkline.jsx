@@ -1,6 +1,20 @@
 import React from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 
+// Custom Dot Component to render only on the last point
+const CustomizedDot = (props) => {
+    const { cx, cy, index, dataLength, stroke } = props;
+    if (index === dataLength - 1) {
+        return (
+            <svg x={cx - 4} y={cy - 4} width={8} height={8} className="overflow-visible">
+                <circle cx="4" cy="4" r="3" fill={stroke} className="animate-ping opacity-75" />
+                <circle cx="4" cy="4" r="3" fill={stroke} stroke="white" strokeWidth="1" />
+            </svg>
+        );
+    }
+    return null;
+};
+
 /**
  * Sparkline Mini Chart - Shows price trend
  */
@@ -8,8 +22,7 @@ export const Sparkline = ({
     data,
     width = 80,
     height = 32,
-    color,
-    showGradient = true
+    color
 }) => {
     if (!data || data.length < 2) {
         return (
@@ -56,20 +69,6 @@ export const Sparkline = ({
     const minValue = Math.min(...cleanData) * 0.995;
     const maxValue = Math.max(...cleanData) * 1.005;
 
-    // Custom Dot Component to render only on the last point
-    const CustomizedDot = (props) => {
-        const { cx, cy, index, dataLength, stroke } = props;
-        if (index === dataLength - 1) {
-            return (
-                <svg x={cx - 4} y={cy - 4} width={8} height={8} className="overflow-visible">
-                    <circle cx="4" cy="4" r="3" fill={stroke} stroke="white" strokeWidth="1" />
-                    <circle cx="4" cy="4" r="3" fill={stroke} className="animate-ping opacity-75" />
-                </svg>
-            );
-        }
-        return null;
-    };
-
     return (
         <div style={{ width, height }} className="relative">
             <LineChart
@@ -104,8 +103,7 @@ export const Sparkline = ({
 export const PriceChart = ({
     data,
     width = '100%',
-    height = 120,
-    showTooltip = false
+    height = 120
 }) => {
     if (!data || data.length < 2) {
         return (

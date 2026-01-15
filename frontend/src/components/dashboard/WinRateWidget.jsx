@@ -25,7 +25,7 @@ const WinRateWidget = () => {
                         profitFactor: 0
                     });
                 }
-            } catch (err) {
+            } catch {
                 setData({ winRate: 0, totalTrades: 0, wins: 0, losses: 0, netProfit: 0, profitFactor: 0 });
             } finally {
                 setLoading(false);
@@ -39,9 +39,6 @@ const WinRateWidget = () => {
     const winRate = data?.winRate || 0;
 
     // Donut chart calculation
-    const radius = 15.9155;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (winRate / 100) * circumference;
 
     return (
         <div className="bg-gray-800/80 rounded-xl p-6 border border-gray-700/50 backdrop-blur-sm">

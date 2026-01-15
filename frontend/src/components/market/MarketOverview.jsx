@@ -468,7 +468,7 @@ const getMockMarketData = () => ({
 });
 
 const generateMockHistory = (basePrice) => {
-    return Array.from({ length: 20 }, (_, i) =>
+    return Array.from({ length: 20 }, (_) =>
         basePrice + (Math.random() - 0.5) * basePrice * 0.02
     );
 };

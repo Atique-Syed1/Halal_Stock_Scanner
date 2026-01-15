@@ -7,23 +7,23 @@ export const NewsPanel = ({ symbol }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchNews = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(API.NEWS(symbol));
+                const data = await res.json();
+                setNews(data);
+            } catch (e) {
+                console.error("Failed to fetch news", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (symbol) {
             fetchNews();
         }
     }, [symbol]);
-
-    const fetchNews = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(API.NEWS(symbol));
-            const data = await res.json();
-            setNews(data);
-        } catch (e) {
-            console.error("Failed to fetch news", e);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     if (loading) {
         return (

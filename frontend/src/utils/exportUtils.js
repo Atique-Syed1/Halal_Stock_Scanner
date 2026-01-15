@@ -111,7 +111,7 @@ export const exportScanResultsPDF = (stocks, title = 'HalalTrade Pro - Scan Repo
     // Header
     doc.setFontSize(20);
     doc.setTextColor(16, 185, 129); // Green
-    doc.text('HalalTrade Pro', 14, 20);
+    doc.text(title, 14, 20);
 
     doc.setFontSize(12);
     doc.setTextColor(100);

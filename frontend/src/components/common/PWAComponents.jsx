@@ -10,14 +10,11 @@ import { Download, Bell, BellOff, Check, X, Smartphone } from 'lucide-react';
 export const PWAInstallPrompt = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [showInstallBanner, setShowInstallBanner] = useState(false);
-    const [isInstalled, setIsInstalled] = useState(false);
+    const [isInstalled, setIsInstalled] = useState(() =>
+        typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
+    );
 
     useEffect(() => {
-        // Check if already installed
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            setIsInstalled(true);
-            return;
-        }
 
         const handleBeforeInstall = (e) => {
             e.preventDefault();
@@ -170,6 +167,7 @@ export const NotificationToggle = ({ className = '' }) => {
  * UTILITY: Send local notification
  * ====================================================================
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const sendNotification = (title, body, options = {}) => {
     if (Notification.permission !== 'granted') return false;
 

@@ -9,8 +9,7 @@ export const MobileBottomNav = ({
     activeTab,
     onTabChange,
     onOpenPortfolio,
-    onOpenAlerts,
-    onOpenSearch
+    onOpenAlerts
 }) => {
     const navItems = [
         { id: 'dashboard', icon: LayoutDashboard, label: 'Home', action: () => onTabChange('dashboard') },

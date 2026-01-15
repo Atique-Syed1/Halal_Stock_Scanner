@@ -66,7 +66,7 @@ export const AddHoldingModal = ({ isOpen, onClose, onSuccess }) => {
                 const data = await response.json();
                 setError(data.detail || 'Failed to add transaction');
             }
-        } catch (err) {
+        } catch {
             setError('Failed to connect to backend');
         } finally {
             setIsSubmitting(false);

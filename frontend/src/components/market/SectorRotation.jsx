@@ -36,10 +36,14 @@ const SectorRotation = ({ sectors = [] }) => {
 
     // Calculate momentum and relative strength for each sector
     const processedSectors = useMemo(() => {
-        return (sectors.length > 0 ? sectors : getDefaultSectors()).map(sector => {
+        return (sectors.length > 0 ? sectors : getDefaultSectors()).map((sector, index) => {
             // Mock momentum calculation - in real app, use actual price data
-            const momentum = sector.momentum || (Math.random() - 0.5) * 200; // -100 to +100
-            const relativeStrength = sector.relativeStrength || (Math.random() - 0.5) * 200;
+            // Use deterministic values based on index to avoid hydration mismatch
+            const mockMomentum = ((index * 37) % 200) - 100;
+            const mockStrength = ((index * 53) % 200) - 100;
+            
+            const momentum = sector.momentum || mockMomentum;
+            const relativeStrength = sector.relativeStrength || mockStrength;
 
             return {
                 ...sector,
@@ -48,7 +52,7 @@ const SectorRotation = ({ sectors = [] }) => {
                 quadrant: getQuadrant(momentum, relativeStrength)
             };
         });
-    }, [sectors, period]);
+    }, [sectors]);
 
 
     const quadrantConfig = {

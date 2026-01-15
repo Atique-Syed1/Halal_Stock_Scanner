@@ -70,7 +70,7 @@ export const BacktestModal = ({ isOpen, onClose, symbol, stockName }) => {
             } else {
                 setError(data.error || 'Backtest failed');
             }
-        } catch (err) {
+        } catch {
             setError('Failed to connect to backend');
         } finally {
             setIsLoading(false);
@@ -431,7 +431,7 @@ export const BacktestModal = ({ isOpen, onClose, symbol, stockName }) => {
 /**
  * Metric Card Component
  */
-const MetricCard = ({ label, value, color, icon: Icon }) => {
+const MetricCard = ({ label, value, color, icon: IconComponent }) => {
     const colorClasses = {
         green: 'text-green-400 bg-green-900/30 border-green-800',
         red: 'text-red-400 bg-red-900/30 border-red-800',
@@ -442,7 +442,7 @@ const MetricCard = ({ label, value, color, icon: Icon }) => {
     return (
         <div className={`p-3 rounded-lg border ${colorClasses[color]}`}>
             <div className="flex items-center gap-2 text-xs opacity-70 mb-1">
-                <Icon className="w-3 h-3" />
+                <IconComponent className="w-3 h-3" />
                 {label}
             </div>
             <div className="text-lg font-bold">{value}</div>

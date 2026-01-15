@@ -48,7 +48,7 @@ export const TelegramSettings = ({ isOpen, onClose }) => {
             } else {
                 setMessage({ type: 'error', text: result.error || 'Failed to save configuration' });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to connect to backend. Is it running?' });
         } finally {
             setIsSaving(false);
@@ -90,7 +90,7 @@ export const TelegramSettings = ({ isOpen, onClose }) => {
             } else {
                 setMessage({ type: 'error', text: result.error || 'Failed to send test message' });
             }
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to connect to backend' });
         } finally {
             setIsTesting(false);

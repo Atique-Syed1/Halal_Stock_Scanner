@@ -15,7 +15,7 @@ CSV_FILE = DATA_DIR / "nse_stocks.csv"
 # API SETTINGS
 # ====================================================================
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
-API_PORT = int(os.getenv("API_PORT", "8001"))
+API_PORT = int(os.getenv("API_PORT", "8000"))
 
 # CORS Origins - Add production domains via CORS_ORIGINS env var
 _extra_origins = os.getenv("CORS_ORIGINS", "").split(",")

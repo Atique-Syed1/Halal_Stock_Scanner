@@ -62,7 +62,6 @@ const HalalTradeApp = () => {
 
     // Core state
     const [stocks, setStocks] = useState([]);
-    const [previousPrices, setPreviousPrices] = useState({});
     const [isScanning, setIsScanning] = useState(false);
     const [showHalalOnly, setShowHalalOnly] = useState(false);
     const [selectedStock, setSelectedStock] = useState(null);
@@ -86,7 +85,7 @@ const HalalTradeApp = () => {
     const [universeInfo, setUniverseInfo] = useState({ count: 25, name: 'Default' });
     const [telegramEnabled, setTelegramEnabled] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
-    const [useLiveMode, setUseLiveMode] = useLocalStorage('halaltrade-live', true);
+    const [useLiveMode] = useLocalStorage('halaltrade-live', true);
 
     // Apply dark/light mode to document
     // Apply theme to document
@@ -189,7 +188,6 @@ const HalalTradeApp = () => {
                         setLastUpdate(message.timestamp);
                         setPriceUpdates(prev => prev + 1);
 
-                        const newPreviousPrices = {};
 
                         setStocks(prevStocks => {
                             const updatedStocks = [...prevStocks];
@@ -199,7 +197,6 @@ const HalalTradeApp = () => {
                                 message.data.forEach(update => {
                                     const stockIndex = updatedStocks.findIndex(s => s.symbol === update.symbol);
                                     if (stockIndex !== -1) {
-                                        newPreviousPrices[update.symbol] = updatedStocks[stockIndex].price;
                                         updatedStocks[stockIndex] = {
                                             ...updatedStocks[stockIndex],
                                             price: update.price,
@@ -213,7 +210,6 @@ const HalalTradeApp = () => {
                             return updatedStocks;
                         });
 
-                        setPreviousPrices(prev => ({ ...prev, ...newPreviousPrices }));
 
                         setSelectedStock(prev => {
                             if (!prev) return null;
@@ -262,7 +258,7 @@ const HalalTradeApp = () => {
             toast.error('Connection Error', 'Failed to establish WebSocket connection');
             setWsConnecting(false);
         }
-    }, []);
+    }, [toast, useLiveMode]);
 
     const disconnectWebSocket = useCallback(() => {
         if (reconnectTimeoutRef.current) {
@@ -473,7 +469,6 @@ const HalalTradeApp = () => {
                                     stocks={displayedStocks}
                                     selectedStock={selectedStock}
                                     onSelectStock={setSelectedStock}
-                                    previousPrices={previousPrices}
                                     wsConnected={wsConnected}
                                     isInWatchlist={isInWatchlist}
                                     onToggleWatchlist={toggleWatchlist}

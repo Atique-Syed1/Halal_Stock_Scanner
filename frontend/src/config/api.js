@@ -6,8 +6,8 @@
 import performanceMonitor from '../utils/performanceMonitor';
 
 // Use environment variable in production, fallback to localhost
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001';
-const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8001';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 
 // API fetch wrapper with performance tracking
 export const apiFetch = async (url, options = {}) => {

@@ -170,7 +170,7 @@ export const StockScreenerFilters = ({ stocks, onFilterChange, isOpen, onToggle 
     };
 
     const activeFilterCount = Object.entries(filters).filter(
-        ([key, value]) => value !== 'all' && value !== ''
+        ([, value]) => value !== 'all' && value !== ''
     ).length;
 
     if (!isOpen) return null;

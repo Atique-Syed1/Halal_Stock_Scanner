@@ -20,6 +20,16 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 from ..utils.market_utils import get_market_status
 
 
+def _format_stock_summary(stock: dict) -> Dict:
+    """Helper to format stock summary for dashboard"""
+    return {
+        "symbol": stock.get('symbol', '').replace('.NS', ''),
+        "name": stock.get('name', stock.get('symbol', '')),
+        "price": stock.get('price', 0),
+        "change": stock.get('priceChange', 0),
+        "changePercent": stock.get('priceChangePercent', 0)
+    }
+
 def get_top_movers(limit: int = 5) -> Dict:
     """Get top gainers and losers from cached data"""
     stocks = list(cached_stock_data.values())
@@ -35,25 +45,13 @@ def get_top_movers(limit: int = 5) -> Dict:
     )
     
     gainers = [
-        {
-            "symbol": s.get('symbol', '').replace('.NS', ''),
-            "name": s.get('name', s.get('symbol', '')),
-            "price": s.get('price', 0),
-            "change": s.get('priceChange', 0),
-            "changePercent": s.get('priceChangePercent', 0)
-        }
+        _format_stock_summary(s)
         for s in sorted_stocks[:limit]
         if s.get('priceChangePercent', 0) > 0
     ]
     
     losers = [
-        {
-            "symbol": s.get('symbol', '').replace('.NS', ''),
-            "name": s.get('name', s.get('symbol', '')),
-            "price": s.get('price', 0),
-            "change": s.get('priceChange', 0),
-            "changePercent": s.get('priceChangePercent', 0)
-        }
+        _format_stock_summary(s)
         for s in reversed(sorted_stocks[-limit:])
         if s.get('priceChangePercent', 0) < 0
     ]

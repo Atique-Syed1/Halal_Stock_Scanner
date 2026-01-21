@@ -2,16 +2,17 @@ from typing import Optional
 from sqlmodel import Field, SQLModel
 from datetime import datetime
 
-class Transaction(SQLModel, table=True):
+class BaseDBModel(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
+
+class Transaction(BaseDBModel, table=True):
     symbol: str = Field(index=True)
     type: str  # "BUY" or "SELL"
     quantity: int
     price: float
     date: str = Field(default_factory=lambda: datetime.now().isoformat())
 
-class Alert(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class Alert(BaseDBModel, table=True):
     symbol: str = Field(index=True)
     condition: str  # "Above" or "Below"
     target_price: float
@@ -20,8 +21,7 @@ class Alert(SQLModel, table=True):
     triggered_at: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
-class WatchlistItem(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class WatchlistItem(BaseDBModel, table=True):
     symbol: str = Field(index=True, unique=True)
     added_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 

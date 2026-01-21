@@ -62,13 +62,19 @@ async def analyze_stock(symbol: str) -> Dict:
     return result
 
 
+def _extract_analysis_data(stock: Dict):
+    """Refactored helper to extract common stock data"""
+    return (
+        stock.get('price', 0),
+        stock.get('technicals', {}),
+        stock.get('shariah', {}),
+        stock.get('analysis', {})
+    )
+
 async def generate_gemini_analysis(stock: Dict, symbol: str) -> Dict:
     """Use Google Gemini to generate investment analysis"""
     
-    price = stock.get('price', 0)
-    technicals = stock.get('technicals', {})
-    shariah = stock.get('shariah', {})
-    analysis = stock.get('analysis', {})
+    price, technicals, shariah, analysis = _extract_analysis_data(stock)
 
     # Construct Prompt
     prompt = f"""
@@ -122,9 +128,7 @@ async def generate_gemini_analysis(stock: Dict, symbol: str) -> Dict:
 def generate_expert_analysis(stock: Dict) -> Dict:
     """Legacy Rule-Based Logic (The 'Expert System')"""
     
-    price = stock.get('price', 0)
-    technicals = stock.get('technicals', {})
-    analysis = stock.get('analysis', {})
+    price, technicals, _, analysis = _extract_analysis_data(stock)
     shariah_status = stock.get('shariahStatus', 'Unknown')
     
     rsi = technicals.get('rsi', 50)

@@ -1,7 +1,7 @@
 import json
 import os
 from sqlmodel import Session, select
-from app.database import engine, create_db_and_tables
+from app.core.database import engine, create_db_and_tables
 from app.models import Transaction, Alert
 
 def migrate():

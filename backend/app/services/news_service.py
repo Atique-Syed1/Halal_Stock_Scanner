@@ -1,5 +1,8 @@
+import logging
 import yfinance as yf
 from typing import List, Dict
+
+logger = logging.getLogger(__name__)
 
 async def get_stock_news(symbol: str) -> List[Dict]:
     """
@@ -63,7 +66,7 @@ async def get_stock_news(symbol: str) -> List[Dict]:
         return results
         
     except Exception as e:
-        print(f"[News] Error fetching for {symbol}: {e}")
+        logger.error(f"Error fetching news for {symbol}: {e}")
         return []
 
 async def get_market_news() -> List[Dict]:

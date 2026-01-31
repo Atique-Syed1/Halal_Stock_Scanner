@@ -1,6 +1,9 @@
+import logging
 import httpx
 from typing import Optional
 from sqlmodel import Session
+
+logger = logging.getLogger(__name__)
 from . import settings_service
 from ..database import engine
 
@@ -141,4 +144,4 @@ async def format_and_send_alert(alert: "getattr", current_price: float, stock_da
         
         await send_telegram_message(msg)
     except Exception as e:
-        print(f"[Telegram] Failed to send alert format: {e}")
+        logger.error(f\"Failed to send Telegram alert: {e}\")

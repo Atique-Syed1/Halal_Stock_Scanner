@@ -12,7 +12,7 @@ const OVERSCAN = 5;
  * Stock Table Component - Simple virtualization for performance
  */
 export const StockTable = ({
-    stocks,
+    stocks = [],
     selectedStock,
     onSelectStock,
     wsConnected,
@@ -34,6 +34,7 @@ export const StockTable = ({
 
     // Sort stocks
     const sortedStocks = useMemo(() => {
+        if (!stocks) return [];
         const sorted = [...stocks];
         if (sortConfig.key) {
             sorted.sort((a, b) => {
@@ -60,11 +61,12 @@ export const StockTable = ({
                         aValue = a.shariahStatus === 'Halal' ? 1 : 0;
                         bValue = b.shariahStatus === 'Halal' ? 1 : 0;
                         break;
-                    case 'signal':
+                    case 'signal': {
                         const signalScore = { 'Buy': 3, 'Wait': 2, 'Sell': 1 };
                         aValue = signalScore[a.technicals?.signal] || 0;
                         bValue = signalScore[b.technicals?.signal] || 0;
                         break;
+                    }
                     default:
                         return 0;
                 }

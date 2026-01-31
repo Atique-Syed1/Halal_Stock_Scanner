@@ -111,22 +111,114 @@ def generate_rsi_signal(
 ) -> str:
     """
     Generate trading signal based on RSI + SMA strategy
-    
-    Args:
-        price: Current price
-        rsi: Current RSI value
-        sma: Current SMA value
-        oversold: RSI oversold threshold
-        overbought: RSI overbought threshold
-    
-    Returns:
-        'Buy', 'Sell', or 'Hold'
     """
     if price > sma and rsi < oversold:
         return 'Buy'
     elif rsi > overbought or price < sma:
         return 'Sell'
     return 'Hold'
+
+
+def generate_macd_signal(
+    macd: float,
+    signal: float,
+    prev_macd: float = None,
+    prev_signal: float = None
+) -> str:
+    """
+    Generate MACD signal (Crossover)
+    """
+    # Bullish Crossover: MACD crosses above Signal
+    if prev_macd is not None and prev_signal is not None:
+        if prev_macd < prev_signal and macd > signal:
+            return 'Buy'
+        if prev_macd > prev_signal and macd < signal:
+            return 'Sell'
+    
+    # Trend confirmation
+    if macd > signal and macd > 0:
+        return 'Buy' # Strong trend
+    if macd < signal and macd < 0:
+        return 'Sell'
+        
+    return 'Hold'
+
+
+def generate_bollinger_signal(
+    price: float,
+    lower_band: float,
+    upper_band: float
+) -> str:
+    """
+    Generate Bollinger Band signal (Reversal)
+    """
+    if price <= lower_band:
+        return 'Buy' # Potential oversold bounce
+    if price >= upper_band:
+        return 'Sell' # Potential overbought rejection
+    return 'Hold'
+
+
+def generate_ma_signal(
+    sma_fast: float, # e.g. 50
+    sma_slow: float  # e.g. 200
+) -> str:
+    """
+    Generate Moving Average signal (Golden/Death Cross context)
+    """
+    if sma_fast > sma_slow:
+        return 'Buy' # Uptrend
+    return 'Sell' # Downtrend
+
+
+def calculate_composite_score(
+    signals: dict,
+    weights: dict = None
+) -> dict:
+    """
+    Calculate a composite score (0-100) and final signal
+    """
+    if weights is None:
+        weights = {
+            'rsi': 0.3,
+            'macd': 0.3,
+            'ma': 0.2,
+            'bb': 0.2
+        }
+    
+    score = 50 # Neutral start
+    
+    # RSI Contribution
+    if signals['rsi'] == 'Buy': score += 20 * weights['rsi']
+    elif signals['rsi'] == 'Sell': score -= 20 * weights['rsi']
+    
+    # MACD Contribution
+    if signals['macd'] == 'Buy': score += 20 * weights['macd']
+    elif signals['macd'] == 'Sell': score -= 20 * weights['macd']
+    
+    # MA Contribution
+    if signals['ma'] == 'Buy': score += 20 * weights['ma']
+    elif signals['ma'] == 'Sell': score -= 20 * weights['ma']
+    
+    # BB Contribution
+    if signals['bb'] == 'Buy': score += 20 * weights['bb']
+    elif signals['bb'] == 'Sell': score -= 20 * weights['bb']
+    
+    # Normalize limits
+    score = max(0, min(100, score))
+    
+    # Determine Final Label
+    if score >= 80: label = 'Strong Buy'
+    elif score >= 60: label = 'Buy'
+    elif score <= 20: label = 'Strong Sell'
+    elif score <= 40: label = 'Sell'
+    else: label = 'Hold'
+    
+    return {
+        "score": round(score, 0),
+        "label": label
+    }
+
 
 
 def calculate_stop_loss(price: float, rsi: float) -> float:

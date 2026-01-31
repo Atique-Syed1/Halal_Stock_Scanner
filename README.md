@@ -1,226 +1,68 @@
-# 📈 HalalTrade Pro
+# HalalTrade Pro
 
-**India's First AI-Powered Shariah-Compliant Stock Scanner**
+HalalTrade Pro is a premium stock screening and analysis tool designed for Shariah-compliant trading. It features real-time market data, advanced screening filters, portfolio tracking, and automated alerts.
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-10b981?style=for-the-badge)](https://trading-bot-002.vercel.app/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
-
-![HalalTrade Pro Dashboard](./frontend/public/icons/icon-192x192.png)
-
----
-
-## 🌟 Features
-
-### Core Features
-- 🛡️ **Shariah Screening** - Automatic halal/non-halal classification for 500+ NSE stocks
-- 📊 **Real-time Scanner** - Live price updates via WebSocket with buy/sell signals
-- 🤖 **AI Analysis** - Get AI-powered insights and recommendations for any stock
-- 💼 **Portfolio Tracking** - Track holdings, P&L, day's gain with analytics charts
-- 🔔 **Smart Alerts** - Price alerts with Telegram notifications
-- 📈 **Backtesting** - Test trading strategies on historical data
-
-### Technical Highlights
-- ⚡ Real-time WebSocket price updates
-- 📱 PWA - Install as mobile/desktop app
-- 🌙 Dark/Light mode
-- 📊 Interactive charts with Recharts
-- 🧪 Comprehensive test coverage
-
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| React 18 | UI Framework |
-| Vite | Build tool & dev server |
-| TypeScript | Type safety |
-| CSS3 | Custom styling |
-| Recharts | Charts & analytics |
-| Lucide React | Icons |
+- **Framework**: React (Vite)
+- **Styling**: Tailwind CSS (with custom glassmorphism and premium themes)
+- **State Management**: React Hooks & Context
+- **Charts**: Lightweight Charts / Recharts
 
 ### Backend
-| Technology | Purpose |
-|------------|---------|
-| Python | Backend language |
-| FastAPI | REST API framework |
-| WebSocket | Real-time updates |
-| SQLAlchemy | Database ORM |
+- **Framework**: Python (FastAPI)
+- **Database**: SQLite (tradebot.db)
 
-### Testing
-| Technology | Purpose |
-|------------|---------|
-| Vitest | Unit testing |
-| React Testing Library | Component tests |
-| Playwright | E2E browser testing |
-
-### Deployment
-| Service | Purpose |
-|---------|---------|
-| Vercel | Frontend hosting |
-| GitHub | Version control |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+
-- Python 3.9+
-- npm or yarn
-
-### Frontend Setup
-
-```bash
-# Navigate to frontend
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-The app will be available at `http://localhost:5173`
-
-### Backend Setup
-
-```bash
-# Navigate to backend
-cd backend
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start the server
-python -m app.main
-```
-
-The API will be available at `http://localhost:8000`
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 tradebot/
-├── frontend/               # React frontend application
+├── backend/            # Python Backend
+│   ├── app/            # Application Logic
+│   │   ├── models/     # Database Models
+│   │   ├── routers/    # API Endpoints
+│   │   ├── services/   # Business Logic
+│   │   └── utils/      # Helper Functions
+│   └── data/           # Data Storage
+├── frontend/           # React Frontend
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   │   ├── common/     # Shared components
-│   │   │   ├── dashboard/  # Dashboard components
-│   │   │   ├── portfolio/  # Portfolio components
-│   │   │   ├── scanner/    # Stock scanner
-│   │   │   └── settings/   # Settings components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── types/          # TypeScript definitions
-│   │   └── test/           # Test files
-│   ├── public/             # Static assets
-│   └── e2e/                # Playwright E2E tests
-│
-├── backend/                # Python FastAPI backend
-│   └── app/
-│       ├── routers/        # API route handlers
-│       ├── models/         # Database models
-│       └── services/       # Business logic
-│
-└── website/                # Landing page (separate deployment)
-    ├── index.html
-    ├── styles.css
-    └── script.js
+│   │   ├── components/ # UI Components
+│   │   ├── hooks/      # Custom Hooks
+│   │   ├── pages/      # Route Components
+│   │   ├── styles/     # CSS Modules (Variables, Themes, etc.)
+│   │   └── utils/      # Client-side Utilities
+└── ...
 ```
 
----
+## How to Run
 
-## 🔧 Environment Variables
+### Prerequisities
+- Node.js (v18+)
+- Python (v3.10+)
 
-### Frontend (.env)
-```env
-VITE_API_URL=http://localhost:8000/api
-VITE_WS_URL=ws://localhost:8000/ws
-```
+### Setup
 
-### Backend (.env)
-```env
-DATABASE_URL=sqlite:///./app.db
-SECRET_KEY=your-secret-key
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-```
+1. **Backend Setup**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   python app/main.py
+   # Or use the helper script:
+   # ./start_server.ps1
+   ```
 
----
+2. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-## 🧪 Testing
+3. Open your browser at `http://localhost:5173` (or the port shown in terminal).
 
-### Run Unit Tests
-```bash
-cd frontend
-npm run test
-```
-
-### Run E2E Tests
-```bash
-cd frontend
-npm run test:e2e
-```
-
----
-
-## 📱 PWA Features
-
-HalalTrade Pro is a Progressive Web App that can be installed on:
-- 📱 Mobile devices (iOS & Android)
-- 💻 Desktop (Windows, Mac, Linux)
-
-Features:
-- Offline support with Service Worker
-- Push notifications (coming soon)
-- Add to home screen
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Islamic finance principles from AAOIFI standards
-- Stock data from NSE India
-- UI inspiration from modern fintech apps
-
----
-
-## 📞 Contact
-
-- **Website**: [halaltrade.pro](https://halaltrade.pro)
-- **Email**: contact@halaltrade.pro
-- **Twitter**: [@HalalTradePro](https://twitter.com/HalalTradePro)
-
----
-
-<p align="center">
-  Made with ❤️ for the Muslim investor community
-</p>
+## Key Features
+- **Scanner**: Filter stocks by Shariah compliance, technical indicators, and fundamental metrics.
+- **Dashboard**: High-level market overview and portfolio performance.
+- **Alerts**: Receive notifications for price movements or technical signals (Telegram integration supported).
+- **Themes**: Switch between Dark, Light, Ocean, Sunset, and Forest themes.

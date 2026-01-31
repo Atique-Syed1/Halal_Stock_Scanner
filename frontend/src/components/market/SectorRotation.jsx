@@ -37,13 +37,12 @@ const SectorRotation = ({ sectors = [] }) => {
     // Calculate momentum and relative strength for each sector
     const processedSectors = useMemo(() => {
         return (sectors.length > 0 ? sectors : getDefaultSectors()).map((sector, index) => {
-            // Mock momentum calculation - in real app, use actual price data
-            // Use deterministic values based on index to avoid hydration mismatch
+            // Mock momentum calculation if missing (fallback)
             const mockMomentum = ((index * 37) % 200) - 100;
             const mockStrength = ((index * 53) % 200) - 100;
             
-            const momentum = sector.momentum || mockMomentum;
-            const relativeStrength = sector.relativeStrength || mockStrength;
+            const momentum = sector.momentum !== undefined ? sector.momentum : mockMomentum;
+            const relativeStrength = sector.relativeStrength !== undefined ? sector.relativeStrength : mockStrength;
 
             return {
                 ...sector,

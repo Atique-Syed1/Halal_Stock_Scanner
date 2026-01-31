@@ -337,7 +337,7 @@ const Dashboard = ({ onNavigateToScanner }) => {
         );
     }
 
-    const { portfolio, market, stats, topMovers, halalPicks, sectors, alerts } = dashboardData || {};
+    const { portfolio, market, stats, topMovers, halalPicks, alerts, communityTrends } = dashboardData || {};
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -469,11 +469,11 @@ const Dashboard = ({ onNavigateToScanner }) => {
 
             {/* Two Column Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Community Trends - NEW */}
+                <CommunityTrendsWidget trends={communityTrends || []} />
+
                 {/* Active Alerts */}
                 <AlertsPanel alerts={alerts || []} />
-
-                {/* Sector Breakdown */}
-                <SectorBreakdown sectors={sectors || []} />
             </div>
 
             {/* Quick Actions */}

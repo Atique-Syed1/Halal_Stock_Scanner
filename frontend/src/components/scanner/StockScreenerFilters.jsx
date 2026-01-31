@@ -1,22 +1,12 @@
 import React, { useState } from 'react';
 import { Filter, X, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { initialFilters } from '../../utils/stock-filters';
 
 /**
  * Advanced Stock Screener Filters
  * Provides filtering by market cap, P/E ratio, volume, sector, and price range
  */
-export const StockScreenerFilters = ({ stocks, onFilterChange, isOpen, onToggle }) => {
-    const [filters, setFilters] = useState({
-        marketCap: 'all',
-        peRatio: 'all',
-        volume: 'all',
-        sector: 'all',
-        priceMin: '',
-        priceMax: '',
-        signalType: 'all',
-        halalStatus: 'all'
-    });
-
+export const StockScreenerFilters = ({ stocks, filters = initialFilters, onFilterChange, isOpen, onToggle }) => {
     const [expanded, setExpanded] = useState(false);
 
     // Market cap categories
@@ -69,104 +59,47 @@ export const StockScreenerFilters = ({ stocks, onFilterChange, isOpen, onToggle 
         ];
     };
 
-    const handleFilterChange = (key, value) => {
-        const newFilters = { ...filters, [key]: value };
-        setFilters(newFilters);
-        applyFilters(newFilters);
+    // Presets configuration
+    const presets = [
+        {
+            id: 'growth',
+            label: '🚀 High Growth',
+            filters: { marketCap: 'mid', peRatio: 'high', volume: 'high', signalType: 'buy', halalStatus: 'halal' }
+        },
+        {
+            id: 'value',
+            label: '💎 Undervalued Gems',
+            filters: { marketCap: 'small', peRatio: 'low', volume: 'medium', signalType: 'buy', halalStatus: 'halal' }
+        },
+        {
+            id: 'safe',
+            label: '🛡️ Safe Haven',
+            filters: { marketCap: 'large', peRatio: 'medium', volume: 'high', signalType: 'all', halalStatus: 'halal' }
+        },
+        {
+            id: 'halal_strict',
+            label: '☪️ Halal Leaders',
+            filters: { marketCap: 'large', peRatio: 'all', volume: 'all', signalType: 'buy', halalStatus: 'halal' }
+        },
+        {
+            id: 'penny_volatility',
+            label: '⚡ Penny Movers',
+            filters: { marketCap: 'small', peRatio: 'all', volume: 'high', signalType: 'all', halalStatus: 'all' }
+        }
+    ];
+
+    const applyPreset = (preset) => {
+        const newFilters = { ...filters, ...preset.filters };
+        onFilterChange(newFilters);
     };
 
-    const applyFilters = (currentFilters) => {
-        if (!stocks) return;
-
-        let filtered = [...stocks];
-
-        // Market cap filter
-        if (currentFilters.marketCap !== 'all') {
-            filtered = filtered.filter(stock => {
-                const mcap = stock.marketCap || 0;
-                switch (currentFilters.marketCap) {
-                    case 'large': return mcap >= 20000;
-                    case 'mid': return mcap >= 5000 && mcap < 20000;
-                    case 'small': return mcap < 5000;
-                    default: return true;
-                }
-            });
-        }
-
-        // P/E ratio filter
-        if (currentFilters.peRatio !== 'all') {
-            filtered = filtered.filter(stock => {
-                const pe = stock.peRatio || 0;
-                switch (currentFilters.peRatio) {
-                    case 'low': return pe > 0 && pe < 15;
-                    case 'medium': return pe >= 15 && pe <= 25;
-                    case 'high': return pe > 25;
-                    default: return true;
-                }
-            });
-        }
-
-        // Volume filter
-        if (currentFilters.volume !== 'all') {
-            filtered = filtered.filter(stock => {
-                const vol = stock.volume || 0;
-                switch (currentFilters.volume) {
-                    case 'high': return vol >= 1000000;
-                    case 'medium': return vol >= 100000 && vol < 1000000;
-                    case 'low': return vol < 100000;
-                    default: return true;
-                }
-            });
-        }
-
-        // Sector filter
-        if (currentFilters.sector !== 'all') {
-            filtered = filtered.filter(stock => stock.sector === currentFilters.sector);
-        }
-
-        // Price range filter
-        if (currentFilters.priceMin) {
-            filtered = filtered.filter(stock => stock.price >= parseFloat(currentFilters.priceMin));
-        }
-        if (currentFilters.priceMax) {
-            filtered = filtered.filter(stock => stock.price <= parseFloat(currentFilters.priceMax));
-        }
-
-        // Signal type filter
-        if (currentFilters.signalType !== 'all') {
-            filtered = filtered.filter(stock => {
-                const signal = (stock.signal || '').toLowerCase();
-                return signal.includes(currentFilters.signalType);
-            });
-        }
-
-        // Halal status filter
-        if (currentFilters.halalStatus !== 'all') {
-            filtered = filtered.filter(stock => {
-                const status = (stock.halalStatus || '').toLowerCase();
-                if (currentFilters.halalStatus === 'halal') return status === 'halal';
-                if (currentFilters.halalStatus === 'non-halal') return status === 'non-halal' || status === 'haram';
-                if (currentFilters.halalStatus === 'pending') return status === 'pending' || !status;
-                return true;
-            });
-        }
-
-        onFilterChange(filtered);
+    const handleFilterChange = (key, value) => {
+        const newFilters = { ...filters, [key]: value };
+        onFilterChange(newFilters);
     };
 
     const resetFilters = () => {
-        const defaultFilters = {
-            marketCap: 'all',
-            peRatio: 'all',
-            volume: 'all',
-            sector: 'all',
-            priceMin: '',
-            priceMax: '',
-            signalType: 'all',
-            halalStatus: 'all'
-        };
-        setFilters(defaultFilters);
-        onFilterChange(stocks); // Return all stocks
+        onFilterChange(initialFilters);
     };
 
     const activeFilterCount = Object.entries(filters).filter(
@@ -200,6 +133,20 @@ export const StockScreenerFilters = ({ stocks, onFilterChange, isOpen, onToggle 
             </div>
 
             <div className={`filters-body ${expanded ? 'expanded' : ''}`}>
+                {/* Presets Row */}
+                <div className="mb-4 flex flex-wrap gap-2 pb-4 border-b border-gray-700/50">
+                    <span className="text-xs font-medium text-gray-400 uppercase tracking-wider self-center mr-2">Quick Scans:</span>
+                    {presets.map(preset => (
+                        <button
+                            key={preset.id}
+                            onClick={() => applyPreset(preset)}
+                            className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-800 hover:bg-indigo-900/50 border border-gray-700 hover:border-indigo-500/50 text-gray-300 hover:text-indigo-300 transition-all flex items-center gap-1.5"
+                        >
+                            {preset.label}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Row 1: Main filters */}
                 <div className="filter-row">
                     <div className="filter-group">

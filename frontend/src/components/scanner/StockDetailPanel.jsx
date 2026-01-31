@@ -240,33 +240,72 @@ const TechnicalAnalysis = ({ stock }) => {
         );
     }
 
-    const { signal, signalStrength, sl, tp, gain } = stock.technicals;
-    const safeSignal = signal || 'Hold';
+    const { label, score, signals, sl, tp, gain } = stock.technicals;
+    const analysis = stock.analysis || {};
+    const safeLabel = label || 'Hold';
+
+    const getSignalColor = (sig) => {
+        if (sig === 'Buy' || sig === 'Strong Buy') return 'text-emerald-400';
+        if (sig === 'Sell' || sig === 'Strong Sell') return 'text-red-400';
+        return 'text-gray-400';
+    };
+    
+    const getScoreColor = (score) => {
+        if (score >= 60) return 'text-emerald-400';
+        if (score <= 40) return 'text-red-400';
+        return 'text-yellow-400';
+    };
 
     return (
         <div className="space-y-4">
-            {/* Signal Card */}
-            <div className={`p-4 rounded-lg border flex items-center justify-between ${safeSignal === 'Buy'
-                ? 'bg-blue-900/20 border-blue-500/50'
-                : 'bg-gray-700/20 border-gray-600'
-                }`}>
+            {/* Composite Signal Card */}
+            <div className={`p-4 rounded-lg border flex items-center justify-between ${
+                safeLabel.includes('Buy') ? 'bg-emerald-900/20 border-emerald-500/50' :
+                safeLabel.includes('Sell') ? 'bg-red-900/20 border-red-500/50' :
+                'bg-gray-700/20 border-gray-600'
+            }`}>
                 <div>
-                    <p className="text-xs text-gray-400 uppercase">Algo Signal</p>
-                    <p className={`text-xl font-bold ${safeSignal === 'Buy' ? 'text-blue-400' : 'text-gray-400'
-                        }`}>
-                        {safeSignal.toUpperCase()}
+                    <p className="text-xs text-gray-400 uppercase">Composite Signal</p>
+                    <p className={`text-xl font-bold ${getSignalColor(safeLabel)}`}>
+                        {safeLabel.toUpperCase()}
                     </p>
                 </div>
-                {safeSignal === 'Buy' && (
-                    <div className="text-right">
-                        <p className="text-xs text-gray-400 uppercase">Confidence</p>
-                        <p className="text-xl font-bold text-white">{signalStrength || 0}%</p>
-                    </div>
-                )}
+                <div className="text-right">
+                    <p className="text-xs text-gray-400 uppercase">Score</p>
+                    <p className={`text-xl font-bold ${getScoreColor(score)}`}>
+                        {score || 0}/100
+                    </p>
+                </div>
+            </div>
+
+            {/* Indicator Breakdown */}
+            <div className="grid grid-cols-2 gap-3">
+                <IndicatorCard 
+                    name="RSI (14)" 
+                    value={stock.technicals.rsi} 
+                    signal={signals?.rsi} 
+                />
+                <IndicatorCard 
+                    name="MACD" 
+                    value={analysis.macd} 
+                    signal={signals?.macd} 
+                />
+                <IndicatorCard 
+                    name="Bollinger" 
+                    value={analysis.bb_lower} // Just showing lower band as reference
+                    label="Band"
+                    signal={signals?.bb} 
+                />
+                <IndicatorCard 
+                    name="Trend (MA)" 
+                    value={analysis.sma50}
+                    label="SMA 50"
+                    signal={signals?.ma} 
+                />
             </div>
 
             {/* Trade Setup */}
-            {safeSignal === 'Buy' && (
+            {(safeLabel === 'Buy' || safeLabel === 'Strong Buy') && (
                 <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
                     <div className="flex items-center gap-2 mb-3 text-yellow-400">
                         <Activity className="w-4 h-4" />
@@ -294,6 +333,27 @@ const TechnicalAnalysis = ({ stock }) => {
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+const IndicatorCard = ({ name, value, label, signal }) => {
+    const getSignalBadge = (sig) => {
+        if (sig === 'Buy') return <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">Buy</span>;
+        if (sig === 'Sell') return <span className="bg-red-500/20 text-red-400 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">Sell</span>;
+        return <span className="bg-gray-700 text-gray-400 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold">Hold</span>;
+    };
+
+    return (
+        <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/50">
+            <div className="flex justify-between items-start mb-1">
+                <span className="text-xs text-gray-400">{name}</span>
+                {getSignalBadge(signal)}
+            </div>
+            <div className="font-mono text-sm text-white">
+                {typeof value === 'number' ? value.toFixed(2) : 'N/A'}
+                {label && <span className="text-[10px] text-gray-500 ml-1">{label}</span>}
+            </div>
         </div>
     );
 };

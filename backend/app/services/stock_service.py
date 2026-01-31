@@ -1,6 +1,7 @@
 """
 Stock Service - Stock data fetching and processing
 """
+import logging
 import random
 import pandas as pd
 import yfinance as yf
@@ -14,10 +15,13 @@ from ..config import (
 from ..utils.indicators import (
     calculate_rsi, calculate_sma, calculate_ema, calculate_macd,
     calculate_bollinger_bands, calculate_volume_ma, generate_rsi_signal,
+    generate_macd_signal, generate_bollinger_signal, generate_ma_signal, calculate_composite_score,
     calculate_stop_loss, calculate_take_profit, calculate_potential_gain
 )
 from ..utils.cache import stock_data_cache, history_cache
+from .data_provider.factory import current_provider
 
+logger = logging.getLogger(__name__)
 
 # In-memory state
 active_stock_list = {
@@ -37,7 +41,7 @@ def load_csv_stocks() -> bool:
     from ..utils.csv_helper import parse_stock_csv
     
     if not CSV_FILE.exists():
-        print(f"[CSV] File not found: {CSV_FILE}")
+        logger.warning(f"CSV file not found: {CSV_FILE}")
         return False
     
     try:
@@ -59,11 +63,11 @@ def load_csv_stocks() -> bool:
                 "symbols": symbols,
                 "source": "csv"
             }
-            print(f"[CSV] Loaded {len(symbols)} stocks from {CSV_FILE.name}")
+            logger.info(f"Loaded {len(symbols)} stocks from {CSV_FILE.name}")
             return True
             
     except Exception as e:
-        print(f"[CSV] Error loading: {e}")
+        logger.error(f"Error loading CSV: {e}")
     
     return False
 
@@ -99,7 +103,7 @@ def get_stock_history(symbol: str, period: str = "1y") -> list:
     cache_key = f"{symbol}:{period}"
     cached_data = history_cache.get(cache_key)
     if cached_data is not None:
-        print(f"[Cache HIT] History for {symbol} ({period})")
+        logger.debug(f"Cache hit: History for {symbol} ({period})")
         return cached_data
     
     try:
@@ -122,16 +126,13 @@ def get_stock_history(symbol: str, period: str = "1y") -> list:
         elif yf_period == "3mo":
             interval = "1d"
             
-        print(f"Fetching history for {symbol}: Period={yf_period} (req={period}), Interval={interval}")
+        logger.debug(f"Fetching history for {symbol}: Period={yf_period}, Interval={interval}")
         
-        # Ensure .NS suffix for Indian stocks
-        search_symbol = symbol if symbol.endswith(".NS") else f"{symbol}.NS"
-        
-        ticker = yf.Ticker(search_symbol)
-        history = ticker.history(period=yf_period, interval=interval)
+        # Use Data Provider
+        history = current_provider.get_history(symbol, period=yf_period, interval=interval)
         
         if history.empty:
-            print(f"Warning: No history found for {symbol}")
+            logger.warning(f"No history found for {symbol}")
             return []
             
         # Format for frontend and sanitize NaNs
@@ -147,13 +148,13 @@ def get_stock_history(symbol: str, period: str = "1y") -> list:
             })
         
         # Cache the result
-        history_cache.set(cache_key, formatted_data)
-        print(f"[Cache SET] History for {symbol} ({period})")
+        history_cache[cache_key] = formatted_data
+        logger.debug(f"Cached history for {symbol} ({period})")
         
         return formatted_data
         
     except Exception as e:
-        print(f"Error fetching history for {symbol}: {e}")
+        logger.error(f"Error fetching history for {symbol}: {e}")
         return []
 
 def item_value(val):
@@ -162,11 +163,11 @@ def item_value(val):
     return float(val)
 
 
-def get_full_stock_data(symbol: str, ticker) -> Optional[dict]:
+def get_full_stock_data(symbol: str) -> Optional[dict]:
     """Get complete stock data with technicals and Shariah status"""
     try:
         # Fetch enough history for 200 SMA
-        hist = ticker.history(period="1y") 
+        hist = current_provider.get_history(symbol, period="1y")
         if hist.empty or len(hist) < 50: # Need at least 50 points for basic analysis
             return None
         
@@ -203,8 +204,34 @@ def get_full_stock_data(symbol: str, ticker) -> Optional[dict]:
         # Get Shariah status
         shariah = get_shariah_status(symbol)
         
-        # Technical Signal (Simple RSI Strategy kept for the table pill)
-        signal = generate_rsi_signal(current_price, rsi, sma50) # Using SMA50 as trend filter
+        # --- Advanced Signal Generation ---
+        
+        # 1. RSI Signal
+        rsi_signal = generate_rsi_signal(current_price, rsi, sma50)
+        
+        # 2. MACD Signal (Need previous values for crossover check)
+        prev_macd = item_value(macd_line.iloc[-2]) if len(macd_line) > 1 else None
+        prev_signal_line = item_value(signal_line.iloc[-2]) if len(signal_line) > 1 else None
+        macd_signal = generate_macd_signal(macd_val, signal_val, prev_macd, prev_signal_line)
+        
+        # 3. Bollinger Band Signal
+        bb_signal = generate_bollinger_signal(current_price, bb_low_val, bb_up_val)
+        
+        # 4. MA Signal (Golden Cross / Death Cross context)
+        ma_signal = generate_ma_signal(sma50, sma200)
+        
+        # 5. Composite Score
+        signals_map = {
+            'rsi': rsi_signal,
+            'macd': macd_signal,
+            'bb': bb_signal,
+            'ma': ma_signal
+        }
+        composite = calculate_composite_score(signals_map)
+        
+        # Final Decision (Respect Shariah compliance)
+        final_signal = composite['label'] if shariah["passed"] else "N/A"
+        final_score = composite['score'] if shariah["passed"] else 0
         
         # Risk Management
         sl = calculate_stop_loss(current_price, rsi)
@@ -233,12 +260,14 @@ def get_full_stock_data(symbol: str, ticker) -> Optional[dict]:
             },
             "technicals": {
                 "rsi": round(rsi, 1),
-                "signal": signal if shariah["passed"] else "N/A",
-                "label": "Strong Buy" if (rsi < 30 and signal == "Buy") else signal, # Enhanced label
-                "sl": sl if signal == 'Buy' else None,
-                "tp": tp if signal == 'Buy' else None,
-                "gain": gain if signal == 'Buy' else None,
-                "signalStrength": round(abs(rsi - 50) * 1.5, 0) # Mock strength based on RSI deviation
+                "signal": rsi_signal, # Legacy field for table compatibility
+                "label": final_signal, # New Composite Label
+                "score": final_score, # New Composite Score
+                "signals": signals_map, # Detailed breakdown
+                "sl": sl if final_signal in ['Buy', 'Strong Buy'] else None,
+                "tp": tp if final_signal in ['Buy', 'Strong Buy'] else None,
+                "gain": gain if final_signal in ['Buy', 'Strong Buy'] else None,
+                "signalStrength": final_score # Mapped to new score
             },
             "analysis": { # FULL ANALYSIS DATA FOR AI
                 "sma20": round(sma20, 2),
@@ -256,7 +285,7 @@ def get_full_stock_data(symbol: str, ticker) -> Optional[dict]:
         }
         
     except Exception as e:
-        print(f"Error processing {symbol}: {e}")
+        logger.error(f"Error processing stock {symbol}: {e}")
         return None
 
 
@@ -265,21 +294,21 @@ def scan_stocks() -> list:
     global cached_stock_data
     
     symbols = active_stock_list["symbols"]
-    print(f"Scanning {len(symbols)} stocks ({active_stock_list['name']})...")
+    logger.info(f"Scanning {len(symbols)} stocks from {active_stock_list['name']}")
     
     results = []
-    tickers = yf.Tickers(" ".join(symbols))
+    
+    # We can batch fetch prices first if provider supports it, but for full technicals we need history
+    # For now, we iterate (refactor later to async)
     
     for symbol in symbols:
         try:
-            ticker = tickers.tickers.get(symbol)
-            if ticker:
-                stock_data = get_full_stock_data(symbol, ticker)
-                if stock_data:
-                    results.append(stock_data)
-                    cached_stock_data[stock_data["symbol"]] = stock_data
+            stock_data = get_full_stock_data(symbol)
+            if stock_data:
+                results.append(stock_data)
+                cached_stock_data[stock_data["symbol"]] = stock_data
         except Exception as e:
-            print(f"Error processing {symbol}: {e}")
+            logger.error(f"Error processing stock {symbol}: {e}")
             continue
     
     return results
@@ -297,25 +326,17 @@ async def fetch_live_prices(custom_symbols: list = None) -> dict:
     for i in range(0, len(input_symbols), WS_BATCH_SIZE):
         batch = input_symbols[i:i + WS_BATCH_SIZE]
         try:
-            tickers = yf.Tickers(" ".join(batch))
-            for symbol in batch:
-                try:
-                    ticker = tickers.tickers.get(symbol)
-                    if ticker:
-                        hist = ticker.history(period="1d")
-                        if not hist.empty:
-                            import math
-                            clean = symbol.replace('.NS', '')
-                            raw_price = hist['Close'].iloc[-1]
-                            # Skip NaN values to prevent JSON serialization crash
-                            if not math.isnan(raw_price):
-                                price = round(float(raw_price), 2)
-                                prices[clean] = price
-                                live_prices[clean] = price # Update global cache
-                except Exception:
-                    continue
+            # Use Data Provider for batch fetch
+            batch_prices = current_provider.get_batch_prices(batch)
+            
+            # Normalize keys (remove .NS if needed for frontend)
+            for sym, price in batch_prices.items():
+                clean = sym.replace('.NS', '')
+                prices[clean] = price
+                live_prices[clean] = price
+                
         except Exception as e:
-            print(f"Batch error: {e}")
+            logger.error(f\"Batch price fetch error: {e}\")
         
         # Small delay between batches
         if i + WS_BATCH_SIZE < len(input_symbols):

@@ -415,16 +415,16 @@ const getMockMarketData = () => ({
         { name: 'SENSEX', value: 80765.38, change: 342.20, changePercent: 0.43, history: generateMockHistory(80500) }
     ],
     sectors: [
-        { name: 'IT', change: 1.2 },
-        { name: 'Banking', change: -0.35 },
-        { name: 'Pharma', change: 0.8 },
-        { name: 'Auto', change: -1.5 },
-        { name: 'FMCG', change: 0.3 },
-        { name: 'Metal', change: 2.1 },
-        { name: 'Energy', change: -0.2 },
-        { name: 'Realty', change: 1.5 },
-        { name: 'Infra', change: 0.6 },
-        { name: 'Media', change: -0.8 }
+        { name: 'IT', change: 1.2, momentum: 45, relativeStrength: 65 },
+        { name: 'Banking', change: -0.35, momentum: -25, relativeStrength: 30 },
+        { name: 'Pharma', change: 0.8, momentum: 55, relativeStrength: 40 },
+        { name: 'Auto', change: -1.5, momentum: -40, relativeStrength: -20 },
+        { name: 'FMCG', change: 0.3, momentum: 20, relativeStrength: 15 },
+        { name: 'Metal', change: 2.1, momentum: 75, relativeStrength: 80 },
+        { name: 'Energy', change: -0.2, momentum: -15, relativeStrength: 25 },
+        { name: 'Realty', change: 1.5, momentum: 35, relativeStrength: -10 },
+        { name: 'Infra', change: 0.6, momentum: 15, relativeStrength: -30 },
+        { name: 'Media', change: -0.8, momentum: -60, relativeStrength: -55 }
     ],
     globalMarkets: [
         { name: 'DOW', change: 0.35 },

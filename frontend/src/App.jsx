@@ -1,5 +1,5 @@
-import './index.css'
-import HalalTradeApp from './HalalTradeScanner'
+
+import HalalTradeApp from './components/HalalTradeApp'
 import { ToastProvider } from './components/common/Toast'
 
 function App() {

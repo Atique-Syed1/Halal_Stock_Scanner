@@ -14,7 +14,7 @@ export const useWatchlist = () => {
                 setWatchlist(data);
             }
         } catch (err) {
-            console.error("Failed to fetch watchlist", err);
+            // Silent fail
         } finally {
             setIsLoading(false);
         }

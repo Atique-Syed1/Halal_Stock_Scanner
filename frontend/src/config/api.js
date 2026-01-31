@@ -3,7 +3,7 @@
  * Centralized API URL management with performance tracking
  */
 
-import performanceMonitor from '../utils/performanceMonitor';
+import performanceMonitor from '../utils/performance-monitor';
 
 // Use environment variable in production, fallback to localhost
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -32,6 +32,11 @@ export const API = {
   BASE: API_BASE,
   WS: WS_BASE,
 
+  // Auth
+  AUTH_LOGIN: `${API_BASE}/api/token`,
+  AUTH_REGISTER: `${API_BASE}/api/register`,
+  AUTH_ME: `${API_BASE}/api/users/me`,
+
   // Scan endpoints
   SCAN: `${API_BASE}/api/scan`,
   STOCK: (symbol) => `${API_BASE}/api/stock/${symbol}`,
@@ -55,6 +60,7 @@ export const API = {
 
   // Portfolio endpoints
   PORTFOLIO: `${API_BASE}/api/portfolio`,
+  PORTFOLIO_ANALYZE: `${API_BASE}/api/portfolio/analyze`,
   PORTFOLIO_TRANSACTION: `${API_BASE}/api/portfolio/transaction`,
   PORTFOLIO_DELETE_TRANSACTION: (id) => `${API_BASE}/api/portfolio/transaction/${id}`,
   PORTFOLIO_TRANSACTIONS: `${API_BASE}/api/portfolio/transactions`,

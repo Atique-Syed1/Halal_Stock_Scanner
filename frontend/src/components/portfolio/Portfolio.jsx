@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Briefcase, Plus, TrendingUp, TrendingDown, DollarSign, PieChart, X, Loader, BarChart3, Calendar } from 'lucide-react';
+import { Briefcase, Plus, TrendingUp, TrendingDown, DollarSign, PieChart, X, Loader, BarChart3, Calendar, Bot } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { AddHoldingModal } from './AddHolding';
+import PortfolioAnalysisModal from './PortfolioAnalysisModal';
 import API from '../../config/api';
 
 /**
@@ -13,6 +14,7 @@ export const Portfolio = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('holdings'); // 'holdings', 'analytics', 'history'
     const [isLoading, setIsLoading] = useState(true);
     const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isAuditOpen, setIsAuditOpen] = useState(false);
 
     const fetchPortfolio = useCallback(async () => {
         setIsLoading(true);
@@ -122,6 +124,12 @@ export const Portfolio = ({ isOpen, onClose }) => {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsAuditOpen(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 mr-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white text-xs font-bold shadow-lg shadow-fuchsia-900/20 transition-all hover:scale-105"
+                        >
+                            <Bot className="w-3 h-3" /> AI Audit
+                        </button>
                         <div className="flex bg-gray-800 rounded-lg p-1 mr-4 border border-gray-700">
                             <button
                                 onClick={() => setActiveTab('holdings')}
@@ -209,6 +217,10 @@ export const Portfolio = ({ isOpen, onClose }) => {
                 isOpen={isAddOpen}
                 onClose={() => setIsAddOpen(false)}
                 onSuccess={fetchPortfolio}
+            />
+            <PortfolioAnalysisModal 
+                isOpen={isAuditOpen} 
+                onClose={() => setIsAuditOpen(false)} 
             />
         </div>
     );

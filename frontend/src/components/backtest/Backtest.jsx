@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Activity, Calendar, DollarSign, Target, AlertTriangle, Play, Loader, X, BarChart3, Download } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { exportBacktestPDF } from '../../utils/exportUtils';
+import { exportBacktestPDF } from '../../utils/export-utils';
 import API from '../../config/api';
 
 /**

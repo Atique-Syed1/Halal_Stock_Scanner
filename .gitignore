@@ -16,6 +16,7 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+*.db
 
 # IDE and editor files
 .vscode/

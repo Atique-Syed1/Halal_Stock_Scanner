@@ -162,27 +162,4 @@ export const NotificationToggle = ({ className = '' }) => {
     );
 };
 
-/**
- * ====================================================================
- * UTILITY: Send local notification
- * ====================================================================
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export const sendNotification = (title, body, options = {}) => {
-    if (Notification.permission !== 'granted') return false;
-
-    try {
-        new Notification(title, {
-            body,
-            icon: '/halaltrade-icon.svg',
-            badge: '/halaltrade-icon.svg',
-            ...options
-        });
-        return true;
-    } catch (err) {
-        console.error('Notification error:', err);
-        return false;
-    }
-};
-
 export default PWAInstallPrompt;

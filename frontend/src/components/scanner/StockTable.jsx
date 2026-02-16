@@ -103,7 +103,7 @@ export const StockTable = ({
     const visibleStocks = sortedStocks.slice(startIndex, endIndex);
 
     return (
-        <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden flex flex-col h-full">
+        <div className="lg:col-span-7 glass-card rounded-xl overflow-hidden flex flex-col h-full">
             {/* Header */}
             <div className="p-4 border-b border-gray-700/50 flex justify-between items-center bg-gradient-to-r from-gray-800/80 to-gray-900/80">
                 <h2 className="font-bold text-lg flex items-center gap-2 text-white">

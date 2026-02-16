@@ -19,6 +19,7 @@ import API from '../../config/api';
 import { DashboardSkeleton } from '../common/LoadingSkeleton';
 import WinRateWidget from './WinRateWidget';
 import RiskMetricsWidget from './RiskMetricsWidget';
+import CommunityTrendsWidget from './CommunityTrendsWidget';
 
 /**
  * ====================================================================

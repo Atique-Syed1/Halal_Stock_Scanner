@@ -3,7 +3,7 @@ import { BarChart2, ShieldCheck, TrendingUp, Target, Zap } from 'lucide-react';
 import StatCard from '../common/StatCard';
 
 const StatsCards = ({ stocks, wsConnected, priceUpdates }) => (
-    <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
         <StatCard
             label="Total Scanned"
             value={stocks.length}

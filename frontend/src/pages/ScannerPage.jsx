@@ -84,7 +84,7 @@ export const ScannerPage = ({
     }, []);
 
     return (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in space-y-6">
             {/* SCANNER HEADER */}
             <Header
                 showHalalOnly={showHalalOnly}
@@ -128,7 +128,7 @@ export const ScannerPage = ({
             />
 
             {/* MAIN GRID */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-240px)] min-h-[600px]">
                 <StockTable
                     stocks={filteredStocks}
                     selectedStock={selectedStock}
@@ -146,7 +146,7 @@ export const ScannerPage = ({
                     onToggleWatchlist={toggleWatchlist}
                 />
 
-                <div className="flex flex-col gap-4" ref={detailPanelRef}>
+                <div className="h-full flex flex-col gap-4 lg:col-span-5" ref={detailPanelRef}>
                     {selectedStock ? (
                         <ErrorBoundary>
                             <Suspense fallback={<PageLoadingSkeleton />}>

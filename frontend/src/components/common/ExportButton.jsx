@@ -81,30 +81,4 @@ export const ExportButton = ({ stocks, type = 'scan', watchlist = [] }) => {
     );
 };
 
-/**
- * Simple Export Buttons Row
- */
-export const ExportButtons = ({ stocks, onExportCSV, onExportPDF }) => (
-    <div className="flex gap-2">
-        <button
-            onClick={onExportCSV || (() => exportScanResultsCSV(stocks))}
-            disabled={!stocks || stocks.length === 0}
-            className="flex items-center gap-2 px-3 py-1.5 bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-800 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            <FileSpreadsheet className="w-4 h-4" />
-            CSV
-        </button>
-        {onExportPDF !== false && (
-            <button
-                onClick={onExportPDF || (() => exportScanResultsPDF(stocks))}
-                disabled={!stocks || stocks.length === 0}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <FileText className="w-4 h-4" />
-                PDF
-            </button>
-        )}
-    </div>
-);
-
 export default ExportButton;

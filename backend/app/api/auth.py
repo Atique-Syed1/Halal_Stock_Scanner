@@ -9,7 +9,7 @@ from app.utils.auth_utils import verify_password, create_access_token, get_passw
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.schemas.user import Token, UserCreate
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(prefix="/api", tags=["Authentication"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

@@ -159,7 +159,6 @@ async def get_dashboard(session: Session = Depends(get_session)):
         "topMovers": movers,
         "halalPicks": halal_picks,
         "sectors": sectors,
-        "communityTrends": trends,
         "alerts": [
             {
                 "id": a.id,

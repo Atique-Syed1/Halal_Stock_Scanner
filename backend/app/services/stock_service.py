@@ -336,7 +336,7 @@ async def fetch_live_prices(custom_symbols: list = None) -> dict:
                 live_prices[clean] = price
                 
         except Exception as e:
-            logger.error(f\"Batch price fetch error: {e}\")
+            logger.error(f"Batch price fetch error: {e}")
         
         # Small delay between batches
         if i + WS_BATCH_SIZE < len(input_symbols):

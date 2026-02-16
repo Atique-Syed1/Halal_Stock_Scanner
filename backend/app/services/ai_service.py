@@ -142,7 +142,8 @@ async def generate_portfolio_analysis(portfolio_data: Dict) -> Dict:
         try:
             return await _generate_gemini_portfolio_analysis(portfolio_data)
         except Exception as e:
-            logger.warning(f\"Gemini portfolio analysis failed: {e}\")\n            return _generate_expert_portfolio_analysis(portfolio_data)
+            logger.warning(f"Gemini portfolio analysis failed: {e}")
+            return _generate_expert_portfolio_analysis(portfolio_data)
     else:
         return _generate_expert_portfolio_analysis(portfolio_data)
 
@@ -225,87 +226,7 @@ def _generate_expert_portfolio_analysis(portfolio: Dict) -> Dict:
         "analysis": analysis,
         "suggestions": suggestions
     }
-    
-    price, technicals, _, analysis = _extract_analysis_data(stock)
-    shariah_status = stock.get('shariahStatus', 'Unknown')
-    
-    rsi = technicals.get('rsi', 50)
-    sma20 = analysis.get('sma20', price)
-    sma50 = analysis.get('sma50', price)
-    sma200 = analysis.get('sma200', price)
-    macd_val = analysis.get('macd', 0)
-    macd_signal = analysis.get('macd_signal', 0)
-    bb_upper = analysis.get('bb_upper', price * 1.1)
-    bb_lower = analysis.get('bb_lower', price * 0.9)
-    
-    points = []
-    sentiment_score = 0
-    
-    trend_msg = ""
-    if price > sma200:
-        trend_msg = "The stock is in a **Long-Term Uptrend** (Price > 200 SMA)."
-        sentiment_score += 1
-        if price > sma50 and sma50 > sma200:
-            trend_msg += " Ideally positioned with a strong bullish structure."
-            sentiment_score += 1
-    elif price < sma200:
-        trend_msg = "The stock is in a **Long-Term Downtrend** (Price < 200 SMA)."
-        sentiment_score -= 1
-        if price < sma50:
-            trend_msg += " Short-term weakness is also visible."
-            sentiment_score -= 1
-            
-    points.append(f"📉 **Trend**: {trend_msg}")
-    
-    momentum_msg = []
-    if rsi > 70:
-        momentum_msg.append(f"RSI is **Overbought** ({rsi}), suggesting a potential pullback.")
-        sentiment_score -= 0.5
-    elif rsi < 30:
-        momentum_msg.append(f"RSI is **Oversold** ({rsi}), suggesting the stock is undervalued.")
-        sentiment_score += 1
-    else:
-        momentum_msg.append(f"RSI is Neutral ({rsi}).")
-        
-    if macd_val > macd_signal:
-        momentum_msg.append("MACD is **Bullish** (above signal line).")
-        sentiment_score += 0.5
-    else:
-        momentum_msg.append("MACD is **Bearish** (below signal line).")
-        sentiment_score -= 0.5
-        
-    points.append(f"🚀 **Momentum**: {' '.join(momentum_msg)}")
-    
-    if price >= bb_upper * 0.99:
-        points.append("⚠️ Price near **Upper Bollinger Band** (Resistance).")
-    elif price <= bb_lower * 1.01:
-        points.append("✅ Price near **Lower Bollinger Band** (Support).")
-    else:
-        points.append(f"📊 **Volatility**: Price is trading within the normal volatility bands.")
 
-    # Shariah Check in Expert Logic
-    if shariah_status == 'Non-Halal':
-        points.append("❌ **Shariah**: This stock is Non-Halal. Trading is prohibited.")
-        sentiment_score = -10
-    elif shariah_status == 'Halal':
-        points.append("✅ **Compliance**: This stock passes all Shariah screening criteria.")
-
-    if sentiment_score >= 1.5:
-        verdict = "BUY"
-        summary_text = "Strong technicals suggest a buying opportunity."
-    elif sentiment_score <= -1.5:
-        verdict = "SELL"
-        summary_text = "Technical weakness suggests avoiding or selling."
-    else:
-        verdict = "HOLD"
-        summary_text = "Mixed signals. Wait for clearer direction."
-
-    return {
-        "summary": summary_text,
-        "details": "\n\n".join(points),
-        "sentiment": verdict,
-        "score": sentiment_score
-    }
 
 def generate_expert_analysis(stock: Dict) -> Dict:
     """Legacy Rule-Based Logic (The 'Expert System')"""

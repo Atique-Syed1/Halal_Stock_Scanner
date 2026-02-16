@@ -144,4 +144,4 @@ async def format_and_send_alert(alert: "getattr", current_price: float, stock_da
         
         await send_telegram_message(msg)
     except Exception as e:
-        logger.error(f\"Failed to send Telegram alert: {e}\")
+        logger.error(f"Failed to send Telegram alert: {e}")

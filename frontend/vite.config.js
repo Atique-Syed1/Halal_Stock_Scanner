@@ -37,9 +37,6 @@ export default defineConfig({
 
           // Icons - used across the app
           'vendor-icons': ['lucide-react'],
-
-          // Markdown parsing - loaded only when AI Analyst is used
-          'vendor-markdown': ['react-markdown'],
         },
       },
     },

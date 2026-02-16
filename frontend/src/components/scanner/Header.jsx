@@ -19,7 +19,7 @@ const Header = ({
     onOpenFilters, isFiltersOpen,
     stocks
 }) => (
-    <div className="max-w-7xl mx-auto mb-6 md:mb-8">
+    <div className="mb-6 md:mb-8">
         <div className="flex flex-col xl:flex-row justify-between items-center gap-6 p-1">
             {/* BRANDING SECTION */}
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">

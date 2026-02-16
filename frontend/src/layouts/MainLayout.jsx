@@ -32,7 +32,7 @@ export const MainLayout = ({
         <div className={`min-h-screen bg-gray-900 text-gray-100 font-sans`}>
             {/* TOP NAVIGATION BAR */}
             <nav className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700/50">
-                <div className="max-w-7xl mx-auto px-4 py-3">
+                <div className="max-w-[1600px] mx-auto px-4 py-3">
                     <div className="flex items-center justify-between">
                         {/* LOGO & TABS */}
                         <div className="flex items-center gap-8">
@@ -117,11 +117,10 @@ export const MainLayout = ({
                             {/* Auth Button */}
                             <button
                                 onClick={() => isAuthenticated ? onOpenPortfolio() : setAuthModalOpen(true)}
-                                className={`ml-2 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                    isAuthenticated 
-                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
-                                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
-                                }`}
+                                className={`ml-2 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isAuthenticated
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
+                                    }`}
                             >
                                 {isAuthenticated ? (
                                     <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -137,7 +136,7 @@ export const MainLayout = ({
             </nav>
 
             {/* MAIN CONTENT */}
-            <main className="p-4 md:p-8">
+            <main className="max-w-[1600px] w-full mx-auto p-4 md:px-8 md:py-6">
                 {children}
             </main>
 
@@ -176,9 +175,9 @@ export const MainLayout = ({
 
             <OnboardingTour />
 
-            <AuthModal 
-                isOpen={authModalOpen} 
-                onClose={() => setAuthModalOpen(false)} 
+            <AuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
             />
         </div>
     );

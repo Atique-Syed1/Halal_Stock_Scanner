@@ -5,9 +5,17 @@
 
 import performanceMonitor from '../utils/performance-monitor';
 
-// Use environment variable in production, fallback to localhost
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+// Use environment variable in production, fallback to Render
+let API_BASE = import.meta.env.VITE_API_URL || 'https://halal-stock-scanner.onrender.com';
+let WS_BASE = import.meta.env.VITE_WS_URL || 'wss://halal-stock-scanner.onrender.com';
+
+// Force override if the environment variable still points to the old Railway backend
+if (API_BASE.includes('railway.app')) {
+  API_BASE = 'https://halal-stock-scanner.onrender.com';
+}
+if (WS_BASE.includes('railway.app')) {
+  WS_BASE = 'wss://halal-stock-scanner.onrender.com';
+}
 
 // API fetch wrapper with performance tracking
 export const apiFetch = async (url, options = {}) => {

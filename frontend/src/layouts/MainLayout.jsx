@@ -29,7 +29,7 @@ export const MainLayout = ({
     onSelectStock
 }) => {
     return (
-        <div className={`min-h-screen bg-gray-900 text-gray-100 font-sans`}>
+        <div className={`min-h-screen bg-gray-900 text-gray-100 font-sans overflow-x-hidden`}>
             {/* TOP NAVIGATION BAR */}
             <nav className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700/50">
                 <div className="max-w-[1600px] mx-auto px-4 py-3">

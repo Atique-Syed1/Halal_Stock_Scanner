@@ -25,6 +25,7 @@ CORS_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "https://trading-bot-002.vercel.app",
 ] + [origin.strip() for origin in _extra_origins if origin.strip()]
 
 # ====================================================================
